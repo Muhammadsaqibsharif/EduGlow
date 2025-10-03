@@ -1,6 +1,7 @@
 import './globals.css';
 import type { Metadata } from 'next';
 import { Poppins, PT_Sans } from 'next/font/google';
+import { ServiceWorkerManager } from '@/components/ServiceWorkerManager';
 
 const poppins = Poppins({
   weight: ['300', '400', '500', '600', '700'],
@@ -26,8 +27,12 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
+      <head>
+        <link rel="manifest" href="/manifest.json" />
+      </head>
       <body className={`${poppins.variable} ${ptSans.variable}`}>
         {children}
+        <ServiceWorkerManager />
       </body>
     </html>
   );

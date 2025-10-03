@@ -26,6 +26,36 @@ export interface Question {
   };
 }
 
+export interface QuizState {
+  questions: Question[];
+  currentQuestionIndex: number;
+  selectedAnswers: (number | null)[];
+  isComplete: boolean;
+  timeRemaining: number;
+  startTime: number;
+}
+
+export interface QuizSettings {
+  subject: string;
+  topic: string;
+  difficulty: 'easy' | 'medium' | 'hard';
+  questionCount: number;
+  timeLimit?: number; // in minutes
+  language: 'english' | 'urdu';
+}
+
+export interface QuizResult {
+  score: number;
+  totalQuestions: number;
+  percentage: number;
+  timeSpent: number;
+  questionsWithAnswers: {
+    question: Question;
+    userAnswer: number | null;
+    isCorrect: boolean;
+  }[];
+}
+
 export interface QuizAttempt {
   id: string;
   userId: string;

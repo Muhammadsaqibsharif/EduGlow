@@ -1,319 +1,177 @@
 'use client';
 
-import { useEffect, useState, Suspense } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { auth } from '@/lib/firebase/config';
-import { generateQuestions } from '@/lib/ai/gemini';
-import { saveQuizAttempt } from '@/lib/db/firestore';
-import { Question } from '@/types';
-import { CheckCircle, XCircle, Clock, ArrowRight } from 'lucide-react';
-
-function QuizContent() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const [questions, setQuestions] = useState<Question[]>([]);
-  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [selectedAnswers, setSelectedAnswers] = useState<number[]>([]);
-  const [showResults, setShowResults] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [startTime, setStartTime] = useState(Date.now());
-  const [language, setLanguage] = useState<'english' | 'urdu'>('english');
-
-  const subject = searchParams.get('subject') || '';
-  const topic = searchParams.get('topic') || '';
-  const difficulty = (searchParams.get('difficulty') || 'medium') as 'easy' | 'medium' | 'hard';
-
-  useEffect(() => {
-    loadQuestions();
-  }, []);
-
-  const loadQuestions = async () => {
-    setLoading(true);
-    const result = await generateQuestions(subject, topic, difficulty, 5);
-    
-    if (result.success && result.questions.length > 0) {
-      setQuestions(result.questions);
-      setSelectedAnswers(new Array(result.questions.length).fill(-1));
-    } else {
-      alert('Failed to generate questions. Please try again.');
-      router.push('/dashboard');
-    }
-    setLoading(false);
-  };
-
-  const handleAnswerSelect = (answerIndex: number) => {
-    if (showResults) return;
-
-    const newAnswers = [...selectedAnswers];
-    newAnswers[currentQuestionIndex] = answerIndex;
-    setSelectedAnswers(newAnswers);
-  };
-
-  const handleNext = () => {
-    if (currentQuestionIndex < questions.length - 1) {
-      setCurrentQuestionIndex(currentQuestionIndex + 1);
-    }
-  };
-
-  const handlePrevious = () => {
-    if (currentQuestionIndex > 0) {
-      setCurrentQuestionIndex(currentQuestionIndex - 1);
-    }
-  };
-
-  const handleSubmit = async () => {
-    const unanswered = selectedAnswers.filter(a => a === -1).length;
-    if (unanswered > 0) {
-      const confirm = window.confirm(`You have ${unanswered} unanswered questions. Submit anyway?`);
-      if (!confirm) return;
-    }
-
-    setShowResults(true);
-
-    // Calculate score
-    const score = selectedAnswers.reduce((acc, answer, index) => {
-      return answer === questions[index].correctAnswer ? acc + 1 : acc;
-    }, 0);
-
-    // Calculate time spent
-    const timeSpent = Math.floor((Date.now() - startTime) / 1000);
-
-    // Save to Firestore
-    if (auth.currentUser) {
-      await saveQuizAttempt({
-        userId: auth.currentUser.uid,
-        quizId: `quiz_${Date.now()}`,
-        questions,
-        answers: selectedAnswers,
-        score,
-        totalQuestions: questions.length,
-        timeSpent,
-        subject,
-        topic,
-      });
-    }
-  };
-
-  const calculateScore = () => {
-    return selectedAnswers.reduce((acc, answer, index) => {
-      return answer === questions[index].correctAnswer ? acc + 1 : acc;
-    }, 0);
-  };
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Generating personalized questions with AI...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (questions.length === 0) {
-    return (
-      <div className="card text-center">
-        <p className="text-red-600">No questions were generated. Please try again.</p>
-        <button onClick={() => router.push('/dashboard')} className="btn-primary mt-4">
-          Back to Dashboard
-        </button>
-      </div>
-    );
-  }
-
-  const currentQuestion = questions[currentQuestionIndex];
-  const score = calculateScore();
-  const percentage = Math.round((score / questions.length) * 100);
-
-  return (
-    <div className="max-w-4xl mx-auto">
-      {/* Header */}
-      <div className="card mb-6 animate-fade-in">
-        <div className="flex justify-between items-center">
-          <div>
-            <h2 className="text-2xl font-bold">{subject} - {topic}</h2>
-            <p className="text-gray-600 capitalize">Difficulty: {difficulty}</p>
-          </div>
-          <div className="flex items-center space-x-4">
-            <button
-              onClick={() => setLanguage(language === 'english' ? 'urdu' : 'english')}
-              className="btn-outline text-sm"
-            >
-              {language === 'english' ? 'اردو' : 'English'}
-            </button>
-            <div className="flex items-center space-x-2">
-              <Clock className="w-5 h-5 text-gray-500" />
-              <span>{Math.floor((Date.now() - startTime) / 1000)}s</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Progress */}
-        <div className="mt-4">
-          <div className="flex justify-between text-sm mb-2">
-            <span>Question {currentQuestionIndex + 1} of {questions.length}</span>
-            <span>{selectedAnswers.filter(a => a !== -1).length} answered</span>
-          </div>
-          <div className="w-full bg-gray-200 rounded-full h-2">
-            <div
-              className="bg-primary-500 h-2 rounded-full transition-all duration-300"
-              style={{ width: `${((currentQuestionIndex + 1) / questions.length) * 100}%` }}
-            ></div>
-          </div>
-        </div>
-      </div>
-
-      {!showResults ? (
-        <>
-          {/* Question */}
-          <div className="card animate-slide-up">
-            <h3 className="text-xl font-semibold mb-6">{currentQuestion.question}</h3>
-
-            {/* Options */}
-            <div className="space-y-3">
-              {currentQuestion.options.map((option, index) => (
-                <button
-                  key={index}
-                  onClick={() => handleAnswerSelect(index)}
-                  className={`quiz-option ${
-                    selectedAnswers[currentQuestionIndex] === index ? 'quiz-option-selected' : ''
-                  }`}
-                >
-                  <span className="font-medium mr-2">{String.fromCharCode(65 + index)}.</span>
-                  {option}
-                </button>
-              ))}
-            </div>
-
-            {/* Navigation */}
-            <div className="flex justify-between mt-8">
-              <button
-                onClick={handlePrevious}
-                disabled={currentQuestionIndex === 0}
-                className="btn-outline disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                ← Previous
-              </button>
-
-              {currentQuestionIndex === questions.length - 1 ? (
-                <button onClick={handleSubmit} className="btn-primary">
-                  Submit Quiz
-                </button>
-              ) : (
-                <button onClick={handleNext} className="btn-primary">
-                  Next →
-                </button>
-              )}
-            </div>
-          </div>
-        </>
-      ) : (
-        <>
-          {/* Results */}
-          <div className="card animate-scale-in text-center">
-            <h2 className="text-3xl font-bold mb-4">Quiz Complete! 🎉</h2>
-            <div className="text-6xl font-bold text-primary-600 mb-2">{percentage}%</div>
-            <p className="text-xl text-gray-600 mb-8">
-              You scored {score} out of {questions.length}
-            </p>
-
-            <div className="grid grid-cols-3 gap-4 mb-8">
-              <div className="p-4 bg-green-50 rounded-lg">
-                <CheckCircle className="w-8 h-8 text-green-600 mx-auto mb-2" />
-                <div className="text-2xl font-bold">{score}</div>
-                <div className="text-sm text-gray-600">Correct</div>
-              </div>
-              <div className="p-4 bg-red-50 rounded-lg">
-                <XCircle className="w-8 h-8 text-red-600 mx-auto mb-2" />
-                <div className="text-2xl font-bold">{questions.length - score}</div>
-                <div className="text-sm text-gray-600">Incorrect</div>
-              </div>
-              <div className="p-4 bg-blue-50 rounded-lg">
-                <Clock className="w-8 h-8 text-blue-600 mx-auto mb-2" />
-                <div className="text-2xl font-bold">{Math.floor((Date.now() - startTime) / 1000)}s</div>
-                <div className="text-sm text-gray-600">Time</div>
-              </div>
-            </div>
-
-            <div className="flex gap-4 justify-center">
-              <button onClick={() => router.push('/dashboard')} className="btn-outline">
-                Back to Dashboard
-              </button>
-              <button onClick={() => window.location.reload()} className="btn-primary">
-                Try Again
-              </button>
-            </div>
-          </div>
-
-          {/* Detailed Results */}
-          <div className="mt-8 space-y-4">
-            <h3 className="text-2xl font-bold">Review Answers</h3>
-            {questions.map((question, index) => (
-              <div key={index} className="card">
-                <div className="flex items-start justify-between mb-4">
-                  <h4 className="font-semibold flex-1">
-                    {index + 1}. {question.question}
-                  </h4>
-                  {selectedAnswers[index] === question.correctAnswer ? (
-                    <CheckCircle className="w-6 h-6 text-green-600 flex-shrink-0" />
-                  ) : (
-                    <XCircle className="w-6 h-6 text-red-600 flex-shrink-0" />
-                  )}
-                </div>
-
-                <div className="space-y-2 mb-4">
-                  {question.options.map((option, optIndex) => (
-                    <div
-                      key={optIndex}
-                      className={`p-3 rounded-lg ${
-                        optIndex === question.correctAnswer
-                          ? 'bg-green-100 border-2 border-green-500'
-                          : optIndex === selectedAnswers[index]
-                          ? 'bg-red-100 border-2 border-red-500'
-                          : 'bg-gray-50'
-                      }`}
-                    >
-                      <span className="font-medium mr-2">{String.fromCharCode(65 + optIndex)}.</span>
-                      {option}
-                    </div>
-                  ))}
-                </div>
-
-                {/* Explanation */}
-                <div className="bg-blue-50 p-4 rounded-lg">
-                  <div className="font-semibold mb-2">💡 {language === 'english' ? 'Explanation' : 'وضاحت'}</div>
-                  <p className="text-gray-700">
-                    {language === 'english' ? question.explanation.english : question.explanation.urdu}
-                  </p>
-                </div>
-
-                {/* Hint for incorrect answers */}
-                {selectedAnswers[index] !== question.correctAnswer && (
-                  <div className="bg-yellow-50 p-4 rounded-lg mt-4">
-                    <div className="font-semibold mb-2">🔍 {language === 'english' ? 'Hint' : 'اشارہ'}</div>
-                    <p className="text-gray-700">
-                      {language === 'english' ? question.hint.english : question.hint.urdu}
-                    </p>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        </>
-      )}
-    </div>
-  );
-}
+import { Book, Clock, Trophy, Target, ArrowLeft } from 'lucide-react';
+import Link from 'next/link';
 
 export default function QuizPage() {
+  const sampleQuizzes = [
+    {
+      id: 1,
+      title: 'Mathematics - Algebra Basics',
+      difficulty: 'Easy',
+      questions: 10,
+      timeLimit: '15 min',
+      description: 'Test your understanding of basic algebraic concepts',
+      color: 'bg-blue-500'
+    },
+    {
+      id: 2,
+      title: 'Science - Photosynthesis',
+      difficulty: 'Medium',
+      questions: 8,
+      timeLimit: '12 min',
+      description: 'Explore the process of photosynthesis in plants',
+      color: 'bg-green-500'
+    },
+    {
+      id: 3,
+      title: 'English - Grammar Fundamentals',
+      difficulty: 'Easy',
+      questions: 12,
+      timeLimit: '18 min',
+      description: 'Master the basics of English grammar',
+      color: 'bg-purple-500'
+    },
+    {
+      id: 4,
+      title: 'Physics - Newton\'s Laws',
+      difficulty: 'Hard',
+      questions: 15,
+      timeLimit: '25 min',
+      description: 'Deep dive into Newton\'s three laws of motion',
+      color: 'bg-red-500'
+    }
+  ];
+
+  const difficultyColors = {
+    'Easy': 'bg-green-100 text-green-800',
+    'Medium': 'bg-yellow-100 text-yellow-800',
+    'Hard': 'bg-red-100 text-red-800'
+  };
+
   return (
-    <Suspense fallback={
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+    <div className="max-w-6xl mx-auto">
+      {/* Header */}
+      <div className="mb-8">
+        <Link 
+          href="/dashboard" 
+          className="inline-flex items-center text-primary-600 hover:text-primary-700 mb-4 transition-colors"
+        >
+          <ArrowLeft className="w-5 h-5 mr-2" />
+          Back to Dashboard
+        </Link>
+        
+        <div className="card text-center">
+          <Book className="w-16 h-16 text-primary-600 mx-auto mb-4" />
+          <h1 className="text-3xl font-bold mb-2">Available Quizzes</h1>
+          <p className="text-gray-600 text-lg">
+            Choose from our collection of educational quizzes
+          </p>
+        </div>
       </div>
-    }>
-      <QuizContent />
-    </Suspense>
+
+      {/* Stats Overview */}
+      <div className="grid md:grid-cols-4 gap-6 mb-8">
+        <div className="card text-center">
+          <div className="text-2xl font-bold text-blue-600 mb-2">24</div>
+          <div className="text-gray-600">Total Quizzes</div>
+        </div>
+        <div className="card text-center">
+          <div className="text-2xl font-bold text-green-600 mb-2">8</div>
+          <div className="text-gray-600">Completed</div>
+        </div>
+        <div className="card text-center">
+          <div className="text-2xl font-bold text-yellow-600 mb-2">85%</div>
+          <div className="text-gray-600">Average Score</div>
+        </div>
+        <div className="card text-center">
+          <div className="text-2xl font-bold text-purple-600 mb-2">3</div>
+          <div className="text-gray-600">Subjects</div>
+        </div>
+      </div>
+
+      {/* Quiz Grid */}
+      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {sampleQuizzes.map((quiz) => (
+          <div key={quiz.id} className="card hover:scale-105 transition-transform duration-300">
+            <div className={`h-32 ${quiz.color} rounded-lg mb-4 flex items-center justify-center`}>
+              <Book className="w-12 h-12 text-white" />
+            </div>
+            
+            <h3 className="text-xl font-bold mb-2">{quiz.title}</h3>
+            <p className="text-gray-600 mb-4">{quiz.description}</p>
+            
+            <div className="flex items-center justify-between mb-4">
+              <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                difficultyColors[quiz.difficulty as keyof typeof difficultyColors]
+              }`}>
+                {quiz.difficulty}
+              </span>
+              <div className="flex items-center text-gray-500 text-sm">
+                <Clock className="w-4 h-4 mr-1" />
+                {quiz.timeLimit}
+              </div>
+            </div>
+            
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center text-gray-500 text-sm">
+                <Target className="w-4 h-4 mr-1" />
+                {quiz.questions} questions
+              </div>
+              <div className="flex items-center text-gray-500 text-sm">
+                <Trophy className="w-4 h-4 mr-1" />
+                Not attempted
+              </div>
+            </div>
+            
+            <button 
+              className="w-full btn-primary"
+              onClick={() => alert('Quiz functionality coming soon!')}
+            >
+              Start Quiz
+            </button>
+          </div>
+        ))}
+      </div>
+
+      {/* Coming Soon Notice */}
+      <div className="mt-12 card text-center">
+        <div className="text-6xl mb-4">🚧</div>
+        <h2 className="text-2xl font-bold mb-4">Quiz Feature Coming Soon!</h2>
+        <p className="text-gray-600 mb-6">
+          We're working hard to bring you an amazing quiz experience with AI-generated questions.
+          Stay tuned for updates!
+        </p>
+        <div className="grid md:grid-cols-3 gap-6 mt-8">
+          <div className="flex flex-col items-center">
+            <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-3">
+              <Book className="w-6 h-6 text-blue-600" />
+            </div>
+            <h4 className="font-semibold mb-2">AI-Generated Questions</h4>
+            <p className="text-sm text-gray-600 text-center">
+              Personalized questions based on your learning level
+            </p>
+          </div>
+          <div className="flex flex-col items-center">
+            <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-3">
+              <Target className="w-6 h-6 text-green-600" />
+            </div>
+            <h4 className="font-semibold mb-2">Instant Feedback</h4>
+            <p className="text-sm text-gray-600 text-center">
+              Get detailed explanations for every answer
+            </p>
+          </div>
+          <div className="flex flex-col items-center">
+            <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-3">
+              <Trophy className="w-6 h-6 text-purple-600" />
+            </div>
+            <h4 className="font-semibold mb-2">Progress Tracking</h4>
+            <p className="text-sm text-gray-600 text-center">
+              Monitor your learning journey and achievements
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }

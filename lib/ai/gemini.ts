@@ -1,6 +1,6 @@
 'use server';
 
-import { ai, geminiModel } from '@/lib/genkit/config';
+import { geminiModel } from '@/lib/genkit/config';
 import { z } from 'zod';
 
 const QuestionSchema = z.object({
@@ -60,16 +60,9 @@ Return the response in this exact JSON format:
   ]
 }`;
 
-    const response = await ai.generate({
-      model: geminiModel,
-      prompt: prompt,
-      config: {
-        temperature: 0.7,
-        maxOutputTokens: 4000,
-      },
-    });
-
-    const responseText = response.text;
+    const result = await geminiModel.generateContent(prompt);
+    const response = await result.response;
+    const responseText = response.text();
     
     // Clean up the response text to ensure it's valid JSON
     let jsonText = responseText.trim();
@@ -142,16 +135,9 @@ Return the response in this exact JSON format:
   }
 }`;
 
-    const response = await ai.generate({
-      model: geminiModel,
-      prompt: prompt,
-      config: {
-        temperature: 0.7,
-        maxOutputTokens: 2000,
-      },
-    });
-
-    const responseText = response.text;
+    const result = await geminiModel.generateContent(prompt);
+    const response = await result.response;
+    const responseText = response.text();
     
     // Clean up the response text
     let jsonText = responseText.trim();
@@ -204,16 +190,9 @@ Return the response in this exact JSON format:
   "nextSteps": ["step1", "step2", "step3"]
 }`;
 
-    const response = await ai.generate({
-      model: geminiModel,
-      prompt: prompt,
-      config: {
-        temperature: 0.5,
-        maxOutputTokens: 1000,
-      },
-    });
-
-    const responseText = response.text;
+    const result = await geminiModel.generateContent(prompt);
+    const response = await result.response;
+    const responseText = response.text();
     
     // Clean up the response text
     let jsonText = responseText.trim();

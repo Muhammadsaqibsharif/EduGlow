@@ -9,19 +9,15 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@genkit-ai/ai": "^0.5.0",
-    "@genkit-ai/core": "^0.5.0",
-    "@genkit-ai/dotprompt": "^0.5.0",
-    "@genkit-ai/flow": "^0.5.0",
-    "@genkit-ai/googleai": "^0.5.0",
+    "@google/generative-ai": "^0.24.1",
     "firebase": "^10.12.0",
     "firebase-admin": "^12.1.0",
     "framer-motion": "^11.2.0",
-    "genkit": "^0.5.0",
     "lucide-react": "^0.378.0",
     "next": "14.2.3",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "undici": "^7.16.0",
     "zod": "^3.23.8"
   },
   "devDependencies": {
