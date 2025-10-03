@@ -13,6 +13,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -21,7 +22,12 @@ export default function LoginPage() {
 
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      router.push('/dashboard');
+      setSuccess(true);
+      
+      // Brief success indication before redirect
+      setTimeout(() => {
+        router.push('/dashboard');
+      }, 500);
     } catch (err: any) {
       setError(err.message || 'Failed to sign in');
     } finally {
@@ -38,6 +44,12 @@ export default function LoginPage() {
         {error && (
           <div className="bg-red-50 border border-red-300 text-red-700 px-4 py-3 rounded-lg mb-6">
             {error}
+          </div>
+        )}
+
+        {success && (
+          <div className="bg-green-50 border border-green-300 text-green-700 px-4 py-3 rounded-lg mb-6">
+            Login successful! Redirecting to dashboard...
           </div>
         )}
 
@@ -74,10 +86,10 @@ export default function LoginPage() {
 
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || success}
             className="btn-primary w-full"
           >
-            {loading ? 'Signing In...' : 'Sign In'}
+            {loading ? 'Signing In...' : success ? 'Login Successful!' : 'Sign In'}
           </button>
         </form>
 

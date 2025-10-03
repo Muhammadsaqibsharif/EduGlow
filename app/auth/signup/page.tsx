@@ -6,10 +6,7 @@ import Link from 'next/link';
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { auth, db } from '@/lib/firebase/config';
 import { doc, setDoc } from 'firebase/firestore';
-import { User, Mail, Lock, GraduationCap } from 'lucide-react';
-
-const grades = ['Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5', 'Grade 6', 'Grade 7', 'Grade 8', 'Grade 9', 'Grade 10', 'Grade 11', 'Grade 12'];
-const subjects = ['Mathematics', 'Science', 'English', 'Urdu', 'Physics', 'Chemistry', 'Biology', 'Computer Science', 'History', 'Geography'];
+import { User, Mail, Lock } from 'lucide-react';
 
 export default function SignupPage() {
   const router = useRouter();
@@ -18,20 +15,10 @@ export default function SignupPage() {
     email: '',
     password: '',
     confirmPassword: '',
-    grade: '',
-    subjectsOfInterest: [] as string[],
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-
-  const handleSubjectToggle = (subject: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      subjectsOfInterest: prev.subjectsOfInterest.includes(subject)
-        ? prev.subjectsOfInterest.filter((s) => s !== subject)
-        : [...prev.subjectsOfInterest, subject],
-    }));
-  };
+  const [success, setSuccess] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -39,11 +26,6 @@ export default function SignupPage() {
 
     if (formData.password !== formData.confirmPassword) {
       setError('Passwords do not match');
-      return;
-    }
-
-    if (formData.subjectsOfInterest.length === 0) {
-      setError('Please select at least one subject');
       return;
     }
 
@@ -64,13 +46,16 @@ export default function SignupPage() {
         uid: userCredential.user.uid,
         email: formData.email,
         displayName: formData.name,
-        grade: formData.grade,
-        subjectsOfInterest: formData.subjectsOfInterest,
         createdAt: new Date(),
         updatedAt: new Date(),
       });
 
-      router.push('/dashboard');
+      setSuccess(true);
+      
+      // Show success message for 1 second, then redirect to dashboard
+      setTimeout(() => {
+        router.push('/dashboard');
+      }, 1000);
     } catch (err: any) {
       setError(err.message || 'Failed to create account');
     } finally {
@@ -80,13 +65,19 @@ export default function SignupPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4 py-12">
-      <div className="card max-w-2xl w-full animate-scale-in">
+      <div className="card max-w-md w-full animate-scale-in">
         <h1 className="text-3xl font-bold text-center mb-2">Create Your Account</h1>
         <p className="text-gray-600 text-center mb-8">Start your learning journey with EduGlow</p>
 
         {error && (
           <div className="bg-red-50 border border-red-300 text-red-700 px-4 py-3 rounded-lg mb-6">
             {error}
+          </div>
+        )}
+
+        {success && (
+          <div className="bg-green-50 border border-green-300 text-green-700 px-4 py-3 rounded-lg mb-6">
+            Account created successfully! Redirecting to dashboard...
           </div>
         )}
 
@@ -153,52 +144,12 @@ export default function SignupPage() {
             </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium mb-2">Grade</label>
-            <div className="relative">
-              <GraduationCap className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-              <select
-                className="input-field pl-10"
-                value={formData.grade}
-                onChange={(e) => setFormData({ ...formData, grade: e.target.value })}
-                required
-              >
-                <option value="">Select your grade</option>
-                {grades.map((grade) => (
-                  <option key={grade} value={grade}>
-                    {grade}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium mb-2">Subjects of Interest</label>
-            <div className="grid grid-cols-2 gap-3">
-              {subjects.map((subject) => (
-                <button
-                  key={subject}
-                  type="button"
-                  onClick={() => handleSubjectToggle(subject)}
-                  className={`p-3 rounded-lg border-2 transition-all duration-300 ${
-                    formData.subjectsOfInterest.includes(subject)
-                      ? 'border-primary-500 bg-primary-50 text-primary-700'
-                      : 'border-gray-200 hover:border-primary-300'
-                  }`}
-                >
-                  {subject}
-                </button>
-              ))}
-            </div>
-          </div>
-
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || success}
             className="btn-primary w-full"
           >
-            {loading ? 'Creating Account...' : 'Sign Up'}
+            {loading ? 'Creating Account...' : success ? 'Account Created!' : 'Sign Up'}
           </button>
         </form>
 
