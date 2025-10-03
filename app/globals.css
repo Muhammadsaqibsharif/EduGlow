@@ -1,0 +1,61 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=PT+Sans:wght@400;700&display=swap');
+
+body {
+  @apply bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 font-ptSans;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  @apply font-poppins;
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+.animate-slide-up {
+  animation: slideUp 0.5s ease-out;
+}
+
+.glass-effect {
+  @apply bg-white/80 backdrop-blur-lg border border-white/20 shadow-xl;
+}
+
+.btn-primary {
+  @apply px-6 py-3 bg-gradient-to-r from-primary-500 to-primary-600 text-white rounded-lg font-poppins font-medium transition-all duration-300 hover:scale-105 hover:shadow-lg active:scale-95;
+}
+
+.btn-secondary {
+  @apply px-6 py-3 bg-gradient-to-r from-secondary-500 to-secondary-600 text-white rounded-lg font-poppins font-medium transition-all duration-300 hover:scale-105 hover:shadow-lg active:scale-95;
+}
+
+.btn-outline {
+  @apply px-6 py-3 border-2 border-primary-500 text-primary-600 rounded-lg font-poppins font-medium transition-all duration-300 hover:bg-primary-500 hover:text-white hover:scale-105 active:scale-95;
+}
+
+.card {
+  @apply glass-effect rounded-2xl p-6 transition-all duration-300 hover:shadow-2xl;
+}
+
+.input-field {
+  @apply w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-300;
+}
+
+.quiz-option {
+  @apply w-full p-4 border-2 border-gray-200 rounded-lg text-left transition-all duration-300 hover:border-primary-400 hover:bg-primary-50 focus:outline-none focus:ring-2 focus:ring-primary-500;
+}
+
+.quiz-option-selected {
+  @apply border-primary-500 bg-primary-100;
+}
+
+.quiz-option-correct {
+  @apply border-success bg-green-50;
+}
+
+.quiz-option-incorrect {
+  @apply border-error bg-red-50;
+}
