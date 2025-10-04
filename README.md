@@ -1,284 +1,202 @@
-# EduGlow 🌟
-**Team IgniteEd | Innovista National Agentic AI Hackathon 2025 (Track 2)**  
-*AI-powered bilingual (English + Urdu) learning companion for students in Pakistan.*
+# EduGlow - AI-Powered Quiz Generator
 
----
+A dynamic quiz generator web application that uses Google Gemini AI to create personalized quizzes across multiple subjects. Built with React, Firebase, and Tailwind CSS.
 
-## 🚩 Problem
-Students in Pakistan often lack access to **affordable, personalized learning resources**.  
-Traditional test prep is rigid, doesn’t adapt to student needs, and rarely supports bilingual formats.  
-This creates barriers for effective self-study, especially for underserved students.
+## 🚀 Features
 
----
+- **AI-Powered Question Generation**: Uses Google Gemini API to generate contextual quiz questions
+- **User Authentication**: Secure signup, login, and password reset using Firebase Auth
+- **Real-time Database**: Quiz history and user statistics stored in Firestore
+- **Multiple Subjects**: Support for Mathematics, Science, History, Computer Science, and more
+- **Difficulty Levels**: Choose between Easy, Medium, and Hard difficulty levels
+- **Comprehensive Analytics**: Track your progress with detailed statistics
+- **Quiz History**: Review all past quizzes with detailed explanations
+- **Responsive Design**: Mobile-friendly interface built with Tailwind CSS
 
-## 💡 Solution
-**EduGlow** is an AI-powered learning companion that:
-- Dynamically generates **MCQs and quizzes** tailored to subject, grade, and student performance.
-- Adapts difficulty levels in **real-time**.
-- Provides **personalized feedback** and **step-by-step explanations** in English & Urdu.
-- Tracks progress to act like an **intelligent tutor** for accessible, personalized, and engaging self-learning.
+## 🛠️ Tech Stack
 
----
+- **Frontend**: React 18 with Vite
+- **Styling**: Tailwind CSS
+- **Backend**: Firebase (Authentication & Firestore Database)
+- **AI**: Google Gemini API
+- **Routing**: React Router DOM v6
+- **Notifications**: React Hot Toast
 
-## ⚡ Technology Stack
-- **Frontend**: Flutter / React Native (for cross-platform app)
-- **Backend & AI**: Python APIs (FastAPI/Flask) + Mistral/OpenAI for quiz generation
-- **Database & Hosting**: Google Firebase Studio
+## 📋 Prerequisites
 
----
+Before you begin, ensure you have the following installed:
+- Node.js (v16 or higher)
+- npm or yarn package manager
+- A Firebase account
+- A Google Gemini API key
 
-## 🔑 Firebase Services (Planned)
-- **Firestore** → Store user profiles, quiz history, and progress tracking.
-- **Firebase Auth** → Secure login with email/Google.
-- **Cloud Functions** → Handle quiz generation requests, adaptive difficulty logic.
-- **Firebase Hosting** → Host admin dashboard / web components.
-- **Firebase Cloud Messaging** → Send personalized study reminders & progress updates.
+## 🔧 Installation & Setup
 
----
+### 1. Clone the repository
 
-## 📅 Project Roadmap
-1. **Planning Phase** (current) → Define problem, solution, architecture, and tech stack.
-2. **Prototype Phase** → Build quiz generation + bilingual explanations.
-3. **Integration Phase** → Connect Firebase services & progress tracking.
-4. **Testing & Deployment** → Prepare working demo for hackathon.
+```bash
+git clone <your-repo-url>
+cd EduGlow
+```
 
----
+### 2. Install dependencies
 
-## 👥 Team IgniteEd
-- Muhammad Saqib (Team Leader)
-- Abdul Rehman Syed (Firebase + Frontend)
-- Madeha shah (UI/UX designer)
-- Abdullah Khaled (Backend)
-
-
----
-
-## 📜 License
-This project is licensed under the MIT License.
-
----
-
-# 🚀 Complete Setup Guide
-
-## Prerequisites
-
-Before you begin, ensure you have:
-- Node.js 18+ and npm/yarn
-- A Google Cloud account with Gemini API access
-- A Firebase project
-
-## Installation Steps
-
-### 1. Install Dependencies
 ```bash
 npm install
 ```
 
-### 2. Set Up Environment Variables
+### 3. Configure Firebase
 
-Create `.env.local` file in the root directory:
-
-#### Firebase Configuration
 1. Go to [Firebase Console](https://console.firebase.google.com/)
-2. Create a new project or select existing one
-3. Go to Project Settings > General
-4. Scroll to "Your apps" and create a web app
-5. Copy the configuration:
+2. Create a new project
+3. Enable Authentication (Email/Password provider)
+4. Create a Firestore Database
+5. Go to Project Settings and copy your Firebase config
+
+### 4. Get Google Gemini API Key
+
+1. Visit [Google AI Studio](https://makersuite.google.com/app/apikey)
+2. Create a new API key
+3. Copy the key for configuration
+
+### 5. Environment Variables
+
+Create a `.env` file in the root directory and add your credentials:
 
 ```env
-NEXT_PUBLIC_FIREBASE_API_KEY=your_api_key_here
-NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your_auth_domain_here
-NEXT_PUBLIC_FIREBASE_PROJECT_ID=your_project_id_here
-NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your_storage_bucket_here
-NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_messaging_sender_id_here
-NEXT_PUBLIC_FIREBASE_APP_ID=your_app_id_here
+VITE_FIREBASE_API_KEY=your_firebase_api_key
+VITE_FIREBASE_AUTH_DOMAIN=your_project_id.firebaseapp.com
+VITE_FIREBASE_PROJECT_ID=your_project_id
+VITE_FIREBASE_STORAGE_BUCKET=your_project_id.appspot.com
+VITE_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
+VITE_FIREBASE_APP_ID=your_app_id
+VITE_GEMINI_API_KEY=your_gemini_api_key
 ```
 
-#### Firebase Admin SDK
-1. Go to Project Settings > Service Accounts
-2. Click "Generate New Private Key"
-3. Download the JSON file and use values:
+**Note**: You can copy `.env.example` and rename it to `.env`, then fill in your actual credentials.
 
-```env
-FIREBASE_ADMIN_PROJECT_ID=your_project_id
-FIREBASE_ADMIN_CLIENT_EMAIL=your_service_account_email
-FIREBASE_ADMIN_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\nYour_Key_Here\n-----END PRIVATE KEY-----\n"
-```
-
-#### Google Gemini API
-1. Go to [Google AI Studio](https://makersuite.google.com/app/apikey)
-2. Create an API key:
-
-```env
-GOOGLE_GENAI_API_KEY=your_gemini_api_key_here
-```
-
-### 3. Set Up Firebase Services
-
-#### Enable Firestore
-1. In Firebase Console → Firestore Database
-2. Click "Create Database"
-3. Choose production mode
-4. Select a location
-
-#### Enable Authentication
-1. In Firebase Console → Authentication
-2. Click "Get Started"
-3. Enable "Email/Password" sign-in method
-
-### 4. Run Development Server
+### 6. Run the application
 
 ```bash
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000)
+The application will open at `http://localhost:5173`
 
-## Features Implemented
-
-### ✅ Dynamic MCQ Generation
-- AI-powered question generation with Gemini
-- Subject and topic-based customization
-- Adaptive difficulty (Easy, Medium, Hard)
-- Performance-based difficulty adjustment
-
-### ✅ Personalized Feedback
-- Bilingual support (English & Urdu)
-- Step-by-step explanations
-- Helpful hints for incorrect answers
-- Stored in Firestore for review
-
-### ✅ Progress Tracking
-- Track attempts, scores, and time spent
-- Identify weak areas
-- Personalized learning path generation
-- Visual analytics
-
-### ✅ Question History
-- Complete quiz history storage
-- Review past attempts
-- Access explanations anytime
-- Performance trends
-
-### ✅ Student Profiles
-- Firebase Authentication
-- Customizable profiles (name, grade, subjects)
-- Personalized dashboard
-- Subject preferences
-
-## 🎨 Design System
-
-### Typography
-- **Headlines**: Poppins (sans-serif)
-- **Body Text**: PT Sans (sans-serif)
-
-### Colors
-- Primary: Blue gradient (#0ea5e9 to #0284c7)
-- Secondary: Purple gradient (#d946ef to #c026d3)
-- Success: #10b981
-- Warning: #f59e0b
-- Error: #ef4444
-
-### Animations
-- Fade in effects for content
-- Slide up animations for cards
-- Scale transitions for interactions
-- Glass-morphism effects
-
-## 📊 Project Structure
+## 📁 Project Structure
 
 ```
-EduGlow/
-├── app/
-│   ├── auth/
-│   │   ├── login/page.tsx
-│   │   └── signup/page.tsx
-│   ├── dashboard/
-│   │   ├── layout.tsx
-│   │   ├── page.tsx
-│   │   └── quiz/page.tsx
-│   ├── globals.css
-│   ├── layout.tsx
-│   └── page.tsx
-├── lib/
-│   ├── ai/gemini.ts
-│   ├── db/firestore.ts
-│   ├── firebase/
-│   │   ├── admin.ts
-│   │   └── config.ts
-│   └── genkit/config.ts
-├── types/index.ts
-├── .env.example
-├── next.config.mjs
-├── package.json
-├── tailwind.config.ts
-└── tsconfig.json
+src/
+├── components/
+│   ├── Auth/
+│   │   ├── SignUp.jsx
+│   │   ├── Login.jsx
+│   │   └── ForgotPassword.jsx
+│   ├── Quiz/
+│   │   ├── QuizConfiguration.jsx
+│   │   ├── QuizTaking.jsx
+│   │   ├── QuizResults.jsx
+│   │   └── ProgressBar.jsx
+│   ├── Dashboard/
+│   │   ├── Dashboard.jsx
+│   │   └── QuizHistory.jsx
+│   └── Layout/
+│       ├── Navbar.jsx
+│       └── ProtectedRoute.jsx
+├── services/
+│   ├── firebase.js
+│   ├── geminiService.js
+│   └── quizService.js
+├── context/
+│   └── AuthContext.jsx
+├── App.jsx
+└── main.jsx
 ```
 
-## 🎯 Usage Guide
+## 🎮 How to Use
 
-### For Students
-1. **Sign Up**: Create account with email, name, grade, subjects
-2. **Start Quiz**: Select subject, topic, and difficulty
-3. **Answer Questions**: AI generates personalized MCQs
-4. **Get Feedback**: View explanations in English or Urdu
-5. **Track Progress**: Monitor performance and weak areas
+1. **Sign Up**: Create a new account with your email and password
+2. **Login**: Access your account
+3. **Configure Quiz**: 
+   - Select a subject
+   - Enter a specific topic
+   - Choose number of questions (5, 10, 15, or 20)
+   - Select difficulty level (Easy, Medium, Hard)
+4. **Take Quiz**: Answer the AI-generated questions
+5. **View Results**: See your score and detailed explanations
+6. **Track Progress**: Review your quiz history and statistics
 
-### For Developers
+## 🔐 Security Notes
 
-#### Generate Questions
-```typescript
-import { generateQuestions } from '@/lib/ai/gemini';
+- Never commit your `.env` file to version control
+- Keep your API keys secure
+- Use Firebase Security Rules to protect your database
+- Enable Firebase App Check for additional security
 
-const result = await generateQuestions(
-  'Mathematics',
-  'Algebra',
-  'medium',
-  5
-);
-```
+## 🚀 Build for Production
 
-#### Save Progress
-```typescript
-import { saveQuizAttempt } from '@/lib/db/firestore';
-
-await saveQuizAttempt({
-  userId: 'user-id',
-  quizId: 'quiz-id',
-  questions,
-  answers,
-  score: 4,
-  totalQuestions: 5,
-  timeSpent: 120,
-  subject: 'Math',
-  topic: 'Algebra',
-  completedAt: new Date()
-});
-```
-
-## 🐛 Troubleshooting
-
-### Build Errors
 ```bash
-rm -rf .next node_modules
-npm install
-npm run dev
+npm run build
 ```
 
-### Firebase Issues
-- Verify environment variables
-- Check Firebase project settings
-- Ensure services are enabled
+The optimized files will be in the `dist/` directory.
 
-### Gemini API Errors
-- Confirm API key is valid
-- Check quota limits
-- Verify network connectivity
+## 📝 Firebase Security Rules
+
+Add these rules to your Firestore Database:
+
+```javascript
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Users collection
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Quizzes collection
+    match /quizzes/{quizId} {
+      allow read: if request.auth != null && resource.data.userId == request.auth.uid;
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+    }
+  }
+}
+```
 
 ## 🤝 Contributing
 
-Contributions welcome! Submit a Pull Request.
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+## 📄 License
+
+This project is open source and available under the [MIT License](LICENSE).
+
+## 🐛 Known Issues
+
+- Gemini API may occasionally return improperly formatted JSON (retry mechanism implemented)
+- Quiz history loads last 50 quizzes for performance
+
+## 💡 Future Enhancements
+
+- Timer for each question
+- Leaderboard system
+- Quiz sharing functionality
+- Export quiz results as PDF
+- Dark mode support
+- Multiple language support
+
+## 📞 Support
+
+For issues and questions, please open an issue on GitHub.
 
 ---
 
-**Made with ❤️ by Team IgniteEd for Innovista Hackathon 2025**
+Built with ❤️ using React, Firebase, and Google Gemini AI
+
+## React Compiler
+
+The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+
+## Expanding the ESLint configuration
+
+If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
