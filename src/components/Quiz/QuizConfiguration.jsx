@@ -147,72 +147,42 @@ const QuizConfiguration = () => {
 
             {/* Number of Questions */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-3">
+              <label htmlFor="numberOfQuestions" className="block text-sm font-medium text-gray-700 mb-2">
                 Number of Questions
               </label>
-              <div className="grid grid-cols-4 gap-3">
+              <select
+                id="numberOfQuestions"
+                name="numberOfQuestions"
+                value={config.numberOfQuestions}
+                onChange={handleChange}
+                className="input-field"
+              >
                 {questionOptions.map((num) => (
-                  <label
-                    key={num}
-                    className={`
-                      relative flex items-center justify-center p-4 border-2 rounded-lg cursor-pointer transition-all
-                      ${config.numberOfQuestions === num
-                        ? 'border-primary-500 bg-primary-50'
-                        : 'border-gray-200 hover:border-gray-300'
-                      }
-                    `}
-                  >
-                    <input
-                      type="radio"
-                      name="numberOfQuestions"
-                      value={num}
-                      checked={config.numberOfQuestions === num}
-                      onChange={handleChange}
-                      className="sr-only"
-                    />
-                    <span className={`text-lg font-semibold ${
-                      config.numberOfQuestions === num ? 'text-primary-700' : 'text-gray-700'
-                    }`}>
-                      {num}
-                    </span>
-                  </label>
+                  <option key={num} value={num}>
+                    {num} Questions
+                  </option>
                 ))}
-              </div>
+              </select>
             </div>
 
             {/* Difficulty Level */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-3">
+              <label htmlFor="difficulty" className="block text-sm font-medium text-gray-700 mb-2">
                 Difficulty Level
               </label>
-              <div className="grid grid-cols-3 gap-3">
+              <select
+                id="difficulty"
+                name="difficulty"
+                value={config.difficulty}
+                onChange={handleChange}
+                className="input-field"
+              >
                 {difficultyLevels.map((level) => (
-                  <label
-                    key={level}
-                    className={`
-                      relative flex items-center justify-center p-4 border-2 rounded-lg cursor-pointer transition-all
-                      ${config.difficulty === level
-                        ? 'border-primary-500 bg-primary-50'
-                        : 'border-gray-200 hover:border-gray-300'
-                      }
-                    `}
-                  >
-                    <input
-                      type="radio"
-                      name="difficulty"
-                      value={level}
-                      checked={config.difficulty === level}
-                      onChange={handleChange}
-                      className="sr-only"
-                    />
-                    <span className={`font-semibold ${
-                      config.difficulty === level ? 'text-primary-700' : 'text-gray-700'
-                    }`}>
-                      {level}
-                    </span>
-                  </label>
+                  <option key={level} value={level}>
+                    {level}
+                  </option>
                 ))}
-              </div>
+              </select>
             </div>
 
             {/* Submit Button */}

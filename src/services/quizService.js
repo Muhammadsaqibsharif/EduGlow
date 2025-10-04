@@ -10,6 +10,7 @@ import {
   orderBy, 
   limit,
   updateDoc,
+  setDoc,
   increment,
   serverTimestamp 
 } from 'firebase/firestore';
@@ -26,12 +27,25 @@ export const saveQuiz = async (quizData) => {
       completedAt: serverTimestamp()
     });
 
-    // Update user statistics
+    // Update user statistics - use setDoc with merge to create if doesn't exist
     const userRef = doc(db, 'users', quizData.userId);
-    await updateDoc(userRef, {
-      totalQuizzes: increment(1),
-      totalScore: increment(quizData.score)
-    });
+    const userSnap = await getDoc(userRef);
+
+    if (userSnap.exists()) {
+      // User document exists, update it
+      await updateDoc(userRef, {
+        totalQuizzes: increment(1),
+        totalScore: increment(quizData.score)
+      });
+    } else {
+      // User document doesn't exist, create it
+      await setDoc(userRef, {
+        userId: quizData.userId,
+        totalQuizzes: 1,
+        totalScore: quizData.score,
+        createdAt: serverTimestamp()
+      });
+    }
 
     return quizRef.id;
   } catch (error) {

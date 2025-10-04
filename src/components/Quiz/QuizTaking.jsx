@@ -16,6 +16,7 @@ const QuizTaking = () => {
   const [userAnswers, setUserAnswers] = useState(Array(questions?.length || 0).fill(null));
   const [selectedOption, setSelectedOption] = useState(null);
   const [startTime] = useState(Date.now());
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (!questions || questions.length === 0) {
@@ -63,7 +64,12 @@ const QuizTaking = () => {
     }
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
+    // Prevent multiple submissions
+    if (isSubmitting) {
+      return;
+    }
+
     const answeredCount = userAnswers.filter(answer => answer !== null).length;
     
     if (answeredCount < questions.length) {
@@ -76,52 +82,70 @@ const QuizTaking = () => {
       }
     }
 
-    // Calculate score
-    let score = 0;
-    questions.forEach((question, index) => {
-      if (userAnswers[index] === question.correctAnswer) {
-        score++;
-      }
-    });
+    setIsSubmitting(true);
+    const loadingToast = toast.loading('Submitting your quiz...');
 
-    // Calculate time taken
-    const timeTaken = Math.floor((Date.now() - startTime) / 1000);
-
-    // Prepare quiz data
-    const quizData = {
-      userId: currentUser.uid,
-      subject: config.subject,
-      topic: config.topic,
-      difficulty: config.difficulty,
-      numberOfQuestions: questions.length,
-      questions: questions,
-      userAnswers: userAnswers,
-      score: score,
-      totalQuestions: questions.length,
-      timeTaken: timeTaken
-    };
-
-    // Save to Firestore and navigate to results
-    saveQuiz(quizData)
-      .then((quizId) => {
-        navigate('/quiz/results', { 
-          state: { 
-            quizData,
-            quizId
-          } 
-        });
-      })
-      .catch((error) => {
-        console.error('Error saving quiz:', error);
-        toast.error('Failed to save quiz results');
-        // Still navigate to results even if save fails
-        navigate('/quiz/results', { 
-          state: { 
-            quizData,
-            quizId: null
-          } 
-        });
+    try {
+      // Calculate score
+      let score = 0;
+      questions.forEach((question, index) => {
+        if (userAnswers[index] === question.correctAnswer) {
+          score++;
+        }
       });
+
+      // Calculate time taken
+      const timeTaken = Math.floor((Date.now() - startTime) / 1000);
+
+      // Prepare quiz data
+      const quizData = {
+        userId: currentUser.uid,
+        subject: config.subject,
+        topic: config.topic,
+        difficulty: config.difficulty,
+        numberOfQuestions: questions.length,
+        questions: questions,
+        userAnswers: userAnswers,
+        score: score,
+        totalQuestions: questions.length,
+        timeTaken: timeTaken
+      };
+
+      // Save to Firestore and navigate to results
+      const quizId = await saveQuiz(quizData);
+      toast.success('Quiz submitted successfully!', { id: loadingToast });
+      
+      navigate('/quiz/results', { 
+        state: { 
+          quizData,
+          quizId
+        } 
+      });
+    } catch (error) {
+      console.error('Error saving quiz:', error);
+      toast.error('Failed to save quiz results', { id: loadingToast });
+      setIsSubmitting(false);
+      
+      // Still navigate to results even if save fails
+      navigate('/quiz/results', { 
+        state: { 
+          quizData: {
+            userId: currentUser.uid,
+            subject: config.subject,
+            topic: config.topic,
+            difficulty: config.difficulty,
+            numberOfQuestions: questions.length,
+            questions: questions,
+            userAnswers: userAnswers,
+            score: questions.reduce((acc, question, index) => 
+              acc + (userAnswers[index] === question.correctAnswer ? 1 : 0), 0),
+            totalQuestions: questions.length,
+            timeTaken: Math.floor((Date.now() - startTime) / 1000)
+          },
+          quizId: null
+        } 
+      });
+    }
   };
 
   const optionLabels = ['A', 'B', 'C', 'D'];
@@ -158,10 +182,11 @@ const QuizTaking = () => {
               <button
                 key={index}
                 onClick={() => handleOptionSelect(index)}
+                disabled={isSubmitting}
                 className={`
-                  w-full text-left p-4 rounded-lg border-2 transition-all duration-200
+                  w-full text-left p-4 rounded-lg border-2 transition-all duration-200 disabled:cursor-not-allowed
                   ${selectedOption === index
-                    ? 'border-primary-500 bg-primary-50'
+                    ? 'border-blue-500 bg-blue-50'
                     : 'border-gray-200 hover:border-gray-300 bg-white'
                   }
                 `}
@@ -170,7 +195,7 @@ const QuizTaking = () => {
                   <div className={`
                     flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center font-semibold mr-4
                     ${selectedOption === index
-                      ? 'bg-primary-500 text-white'
+                      ? 'bg-blue-500 text-white'
                       : 'bg-gray-200 text-gray-700'
                     }
                   `}>
@@ -190,7 +215,7 @@ const QuizTaking = () => {
           <div className="flex justify-between items-center pt-4 border-t">
             <button
               onClick={handlePrevious}
-              disabled={isFirstQuestion}
+              disabled={isFirstQuestion || isSubmitting}
               className="btn-secondary disabled:opacity-50 disabled:cursor-not-allowed"
             >
               ← Previous
@@ -202,10 +227,22 @@ const QuizTaking = () => {
 
             <button
               onClick={handleNext}
-              disabled={selectedOption === null}
-              className="btn-primary"
+              disabled={selectedOption === null || isSubmitting}
+              className="btn-primary relative"
             >
-              {isLastQuestion ? 'Submit Quiz →' : 'Next →'}
+              {isSubmitting ? (
+                <>
+                  <span className="opacity-0">Submit Quiz →</span>
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                  </div>
+                </>
+              ) : (
+                isLastQuestion ? 'Submit Quiz →' : 'Next →'
+              )}
             </button>
           </div>
         </div>

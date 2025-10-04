@@ -49,7 +49,7 @@ const Dashboard = () => {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-primary-600 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Loading dashboard...</p>
         </div>
       </div>
@@ -118,9 +118,9 @@ const Dashboard = () => {
         <div className="mb-8">
           <Link
             to="/quiz/configure"
-            className="block w-full sm:w-auto text-center bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 text-white font-bold py-4 px-8 rounded-lg shadow-lg transition-all duration-200 transform hover:scale-105"
+            className="block w-full sm:w-auto text-center bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-bold py-4 px-8 rounded-lg shadow-lg transition-all duration-200 transform hover:scale-105"
           >
-            <span className="text-xl">✨ Start New Quiz</span>
+            <span className="text-xl">Start New Quiz</span>
           </Link>
         </div>
 
@@ -131,7 +131,7 @@ const Dashboard = () => {
             {recentQuizzes.length > 0 && (
               <Link
                 to="/quiz-history"
-                className="text-primary-600 hover:text-primary-700 font-medium text-sm"
+                className="text-blue-600 hover:text-blue-700 font-medium text-sm"
               >
                 View All →
               </Link>
@@ -203,7 +203,7 @@ const Dashboard = () => {
                         <td className="px-6 py-4 whitespace-nowrap text-sm">
                           <Link
                             to={`/quiz/${quiz.id}`}
-                            className="text-primary-600 hover:text-primary-700 font-medium"
+                            className="text-blue-600 hover:text-blue-700 font-medium"
                           >
                             View Details
                           </Link>
