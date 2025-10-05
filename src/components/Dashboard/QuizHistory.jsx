@@ -90,7 +90,16 @@ const QuizHistory = () => {
 
   // If viewing a specific quiz detail
   if (selectedQuiz && quizId) {
-    const { questions, userAnswers, score, totalQuestions, timeTaken, subject, topic, difficulty, completedAt } = selectedQuiz;
+    const isDynamic = selectedQuiz.quizType === 'dynamic';
+    const questions = selectedQuiz.questions;
+    const userAnswers = isDynamic ? questions.map(q => q.userAnswer) : selectedQuiz.userAnswers;
+    const score = isDynamic ? selectedQuiz.correctAnswers : selectedQuiz.score;
+    const totalQuestions = selectedQuiz.totalQuestions;
+    const timeTaken = selectedQuiz.timeTaken;
+    const subject = selectedQuiz.subject;
+    const topic = selectedQuiz.topic;
+    const difficulty = isDynamic ? selectedQuiz.startingDifficulty : selectedQuiz.difficulty;
+    const completedAt = selectedQuiz.completedAt;
     const percentage = Math.round((score / totalQuestions) * 100);
     const passed = percentage >= 60;
     const optionLabels = ['A', 'B', 'C', 'D'];
@@ -108,8 +117,15 @@ const QuizHistory = () => {
           {/* Score Card */}
           <div className="card mb-6">
             <div className="text-center">
+              {isDynamic && (
+                <div className="mb-4">
+                  <span className="inline-block px-4 py-2 bg-purple-100 text-purple-800 rounded-full text-sm font-semibold">
+                    🎯 Dynamic Quiz {selectedQuiz.completed ? '- Won! 🎉' : ''}
+                  </span>
+                </div>
+              )}
               <div className={`inline-flex items-center justify-center w-20 h-20 rounded-full mb-4 ${
-                passed ? 'bg-green-100' : 'bg-red-100'
+                isDynamic && selectedQuiz.completed ? 'bg-purple-100' : passed ? 'bg-green-100' : 'bg-red-100'
               }`}>
                 {passed ? (
                   <svg className="w-10 h-10 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -123,8 +139,21 @@ const QuizHistory = () => {
               </div>
 
               <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                Score: {score}/{totalQuestions} ({percentage}%)
+                {isDynamic ? 'Correct Answers:' : 'Score:'} {score}/{totalQuestions} ({percentage}%)
               </h1>
+
+              {isDynamic && selectedQuiz.finalStreak !== undefined && (
+                <div className="mb-4 p-4 bg-blue-50 rounded-lg inline-block">
+                  <p className="text-lg font-semibold text-blue-900">
+                    Final Streak: <span className="text-2xl">{selectedQuiz.finalStreak}</span>
+                  </p>
+                  {selectedQuiz.completed && (
+                    <p className="text-sm text-blue-700 mt-1">
+                      🏆 You achieved 5 correct answers in a row!
+                    </p>
+                  )}
+                </div>
+              )}
 
               <div className="flex justify-center flex-wrap gap-4 text-sm text-gray-600 mb-4">
                 <div>
@@ -134,7 +163,7 @@ const QuizHistory = () => {
                   <span className="font-semibold">Topic:</span> {topic}
                 </div>
                 <div>
-                  <span className="font-semibold">Difficulty:</span> {difficulty}
+                  <span className="font-semibold">{isDynamic ? 'Starting' : ''} Difficulty:</span> {difficulty}
                 </div>
                 <div>
                   <span className="font-semibold">Time:</span> {formatTime(timeTaken)}
@@ -142,6 +171,11 @@ const QuizHistory = () => {
                 <div>
                   <span className="font-semibold">Date:</span> {formatDate(completedAt)}
                 </div>
+                {isDynamic && (
+                  <div>
+                    <span className="font-semibold text-purple-600">Mode: Dynamic</span>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -153,7 +187,8 @@ const QuizHistory = () => {
             <div className="space-y-6">
               {questions.map((question, index) => {
                 const userAnswer = userAnswers[index];
-                const isCorrect = userAnswer === question.correctAnswer;
+                const isCorrect = isDynamic ? question.wasCorrect : (userAnswer === question.correctAnswer);
+                const questionDifficulty = isDynamic ? question.difficulty : difficulty;
 
                 return (
                   <div 
@@ -177,9 +212,20 @@ const QuizHistory = () => {
                         )}
                       </div>
                       <div className="flex-1">
-                        <h3 className="text-lg font-semibold text-gray-900 mb-3">
-                          Question {index + 1}: {question.question}
-                        </h3>
+                        <div className="flex items-center justify-between mb-2">
+                          <h3 className="text-lg font-semibold text-gray-900">
+                            Question {index + 1}: {question.question}
+                          </h3>
+                          {isDynamic && (
+                            <span className={`ml-2 px-2 py-1 rounded text-xs font-semibold whitespace-nowrap ${
+                              questionDifficulty === 'Easy' ? 'bg-green-100 text-green-800' :
+                              questionDifficulty === 'Medium' ? 'bg-yellow-100 text-yellow-800' :
+                              'bg-red-100 text-red-800'
+                            }`}>
+                              {questionDifficulty}
+                            </span>
+                          )}
+                        </div>
 
                         <div className="space-y-2 mb-3">
                           {question.options.map((option, optionIndex) => {
@@ -315,27 +361,44 @@ const QuizHistory = () => {
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                   {filteredQuizzes.map((quiz) => {
-                    const percentage = Math.round((quiz.score / quiz.totalQuestions) * 100);
+                    const isDynamic = quiz.quizType === 'dynamic';
+                    const score = isDynamic ? quiz.correctAnswers : quiz.score;
+                    const difficulty = isDynamic ? quiz.startingDifficulty : quiz.difficulty;
+                    const percentage = Math.round((score / quiz.totalQuestions) * 100);
                     return (
                       <tr key={quiz.id} className="hover:bg-gray-50">
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <span className="text-sm font-medium text-gray-900">{quiz.subject}</span>
+                          <div className="flex items-center">
+                            <span className="text-sm font-medium text-gray-900">{quiz.subject}</span>
+                            {isDynamic && (
+                              <span className="ml-2 px-2 py-0.5 bg-purple-100 text-purple-800 rounded text-xs font-semibold">
+                                Dynamic
+                              </span>
+                            )}
+                          </div>
                         </td>
                         <td className="px-6 py-4">
                           <span className="text-sm text-gray-600">{quiz.topic}</span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <span className="text-sm text-gray-600">{quiz.difficulty}</span>
+                          <span className="text-sm text-gray-600">{difficulty}</span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <span className="text-sm text-gray-600">{quiz.totalQuestions}</span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                            percentage >= 60 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                          }`}>
-                            {percentage}%
-                          </span>
+                          <div className="flex flex-col">
+                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                              percentage >= 60 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                            }`}>
+                              {percentage}%
+                            </span>
+                            {isDynamic && quiz.completed && (
+                              <span className="mt-1 text-xs text-purple-600 font-semibold">
+                                🏆 Won!
+                              </span>
+                            )}
+                          </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                           {formatDate(quiz.completedAt)}

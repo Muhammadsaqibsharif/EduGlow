@@ -69,7 +69,7 @@ const Dashboard = () => {
           </p>
         </div>
 
-        {/* Statistics Cards */}
+        {/* Overall Statistics Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <div className="card bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200">
             <div className="flex items-center justify-between">
@@ -113,6 +113,69 @@ const Dashboard = () => {
             </div>
           </div>
         </div>
+
+        {/* Detailed Stats by Quiz Type */}
+        {(stats.standardQuizzes.total > 0 || stats.dynamicQuizzes.total > 0) && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            {/* Standard Quiz Stats */}
+            {stats.standardQuizzes.total > 0 && (
+              <div className="card">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                  <svg className="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  Standard Quizzes
+                </h3>
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600">Total Taken:</span>
+                    <span className="text-lg font-semibold text-gray-900">{stats.standardQuizzes.total}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600">Average Score:</span>
+                    <span className="text-lg font-semibold text-green-600">{stats.standardQuizzes.averageScore}%</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600">Best Score:</span>
+                    <span className="text-lg font-semibold text-purple-600">{stats.standardQuizzes.bestScore}%</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Dynamic Quiz Stats */}
+            {stats.dynamicQuizzes.total > 0 && (
+              <div className="card bg-gradient-to-br from-purple-50 to-pink-50 border border-purple-200">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                  <svg className="w-5 h-5 mr-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
+                  Dynamic Quizzes
+                </h3>
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600">Total Taken:</span>
+                    <span className="text-lg font-semibold text-gray-900">{stats.dynamicQuizzes.total}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600">Average Score:</span>
+                    <span className="text-lg font-semibold text-green-600">{stats.dynamicQuizzes.averageScore}%</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600">Best Score:</span>
+                    <span className="text-lg font-semibold text-purple-600">{stats.dynamicQuizzes.bestScore}%</span>
+                  </div>
+                  <div className="flex justify-between items-center pt-2 border-t border-purple-200">
+                    <span className="text-sm text-gray-600 font-medium">Total Wins (5C):</span>
+                    <span className="text-lg font-bold text-purple-700 flex items-center">
+                      🏆 {stats.dynamicQuizzes.totalWins}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Start New Quiz Button */}
         <div className="mb-8">
@@ -178,11 +241,20 @@ const Dashboard = () => {
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                   {recentQuizzes.map((quiz) => {
-                    const percentage = Math.round((quiz.score / quiz.totalQuestions) * 100);
+                    const isDynamic = quiz.quizType === 'dynamic';
+                    const score = isDynamic ? quiz.correctAnswers : quiz.score;
+                    const percentage = Math.round((score / quiz.totalQuestions) * 100);
                     return (
                       <tr key={quiz.id} className="hover:bg-gray-50">
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <span className="text-sm font-medium text-gray-900">{quiz.subject}</span>
+                          <div className="flex items-center">
+                            <span className="text-sm font-medium text-gray-900">{quiz.subject}</span>
+                            {isDynamic && (
+                              <span className="ml-2 px-2 py-0.5 bg-purple-100 text-purple-800 rounded text-xs font-semibold">
+                                Dynamic
+                              </span>
+                            )}
+                          </div>
                         </td>
                         <td className="px-6 py-4">
                           <span className="text-sm text-gray-600">{quiz.topic}</span>
@@ -191,11 +263,18 @@ const Dashboard = () => {
                           <span className="text-sm text-gray-600">{quiz.totalQuestions}</span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                            percentage >= 60 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                          }`}>
-                            {quiz.score}/{quiz.totalQuestions} ({percentage}%)
-                          </span>
+                          <div className="flex flex-col">
+                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                              percentage >= 60 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                            }`}>
+                              {score}/{quiz.totalQuestions} ({percentage}%)
+                            </span>
+                            {isDynamic && quiz.completed && (
+                              <span className="mt-1 text-xs text-purple-600 font-semibold">
+                                🏆 Won!
+                              </span>
+                            )}
+                          </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                           {formatDate(quiz.completedAt)}

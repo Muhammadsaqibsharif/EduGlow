@@ -145,9 +145,47 @@ export const createUserProfile = async (userId, userData) => {
 };
 
 /**
- * Get user statistics
+ * Save a completed dynamic quiz to Firestore
+ * @param {Object} quizData - Dynamic quiz data to save
+ * @returns {Promise<string>} Quiz document ID
+ */
+export const saveDynamicQuiz = async (quizData) => {
+  try {
+    const quizRef = await addDoc(collection(db, 'quizzes'), {
+      ...quizData,
+      quizType: 'dynamic',
+      completedAt: serverTimestamp()
+    });
+
+    // Update user statistics
+    const userRef = doc(db, 'users', quizData.userId);
+    const userSnap = await getDoc(userRef);
+
+    if (userSnap.exists()) {
+      await updateDoc(userRef, {
+        totalQuizzes: increment(1),
+        totalScore: increment(quizData.correctAnswers)
+      });
+    } else {
+      await setDoc(userRef, {
+        userId: quizData.userId,
+        totalQuizzes: 1,
+        totalScore: quizData.correctAnswers,
+        createdAt: serverTimestamp()
+      });
+    }
+
+    return quizRef.id;
+  } catch (error) {
+    console.error('Error saving dynamic quiz:', error);
+    throw new Error('Failed to save quiz. Please try again.');
+  }
+};
+
+/**
+ * Get user statistics separated by quiz type
  * @param {string} userId - User ID
- * @returns {Promise<Object>} User statistics
+ * @returns {Promise<Object>} User statistics with separate standard and dynamic stats
  */
 export const getUserStats = async (userId) => {
   try {
@@ -157,24 +195,107 @@ export const getUserStats = async (userId) => {
       return {
         totalQuizzes: 0,
         averageScore: 0,
-        bestScore: 0
+        bestScore: 0,
+        standardQuizzes: {
+          total: 0,
+          averageScore: 0,
+          bestScore: 0
+        },
+        dynamicQuizzes: {
+          total: 0,
+          averageScore: 0,
+          bestScore: 0,
+          totalWins: 0
+        }
       };
     }
 
-    const totalScore = quizzes.reduce((sum, quiz) => sum + (quiz.score / quiz.totalQuestions * 100), 0);
-    const scores = quizzes.map(quiz => (quiz.score / quiz.totalQuestions * 100));
+    // Separate standard and dynamic quizzes
+    const standardQuizzes = quizzes.filter(q => q.quizType !== 'dynamic');
+    const dynamicQuizzes = quizzes.filter(q => q.quizType === 'dynamic');
+
+    // Calculate standard quiz stats
+    let standardStats = {
+      total: 0,
+      averageScore: 0,
+      bestScore: 0
+    };
+
+    if (standardQuizzes.length > 0) {
+      const standardScores = standardQuizzes.map(quiz => {
+        const score = quiz.score || 0;
+        const total = quiz.totalQuestions || 1;
+        return (score / total) * 100;
+      });
+      
+      const standardTotalScore = standardScores.reduce((sum, score) => sum + score, 0);
+      
+      standardStats = {
+        total: standardQuizzes.length,
+        averageScore: Math.round(standardTotalScore / standardQuizzes.length),
+        bestScore: Math.round(Math.max(...standardScores))
+      };
+    }
+
+    // Calculate dynamic quiz stats
+    let dynamicStats = {
+      total: 0,
+      averageScore: 0,
+      bestScore: 0,
+      totalWins: 0
+    };
+
+    if (dynamicQuizzes.length > 0) {
+      const dynamicScores = dynamicQuizzes.map(quiz => {
+        const correct = quiz.correctAnswers || 0;
+        const total = quiz.totalQuestions || 1;
+        return (correct / total) * 100;
+      });
+      
+      const dynamicTotalScore = dynamicScores.reduce((sum, score) => sum + score, 0);
+      const totalWins = dynamicQuizzes.filter(q => q.completed === true).length;
+      
+      dynamicStats = {
+        total: dynamicQuizzes.length,
+        averageScore: Math.round(dynamicTotalScore / dynamicQuizzes.length),
+        bestScore: Math.round(Math.max(...dynamicScores)),
+        totalWins: totalWins
+      };
+    }
+
+    // Calculate overall stats
+    const allScores = [
+      ...standardQuizzes.map(quiz => ((quiz.score || 0) / (quiz.totalQuestions || 1)) * 100),
+      ...dynamicQuizzes.map(quiz => ((quiz.correctAnswers || 0) / (quiz.totalQuestions || 1)) * 100)
+    ];
+    
+    const overallTotalScore = allScores.reduce((sum, score) => sum + score, 0);
     
     return {
       totalQuizzes: quizzes.length,
-      averageScore: Math.round(totalScore / quizzes.length),
-      bestScore: Math.round(Math.max(...scores))
+      averageScore: allScores.length > 0 ? Math.round(overallTotalScore / allScores.length) : 0,
+      bestScore: allScores.length > 0 ? Math.round(Math.max(...allScores)) : 0,
+      standardQuizzes: standardStats,
+      dynamicQuizzes: dynamicStats
     };
   } catch (error) {
     console.error('Error fetching user stats:', error);
     return {
       totalQuizzes: 0,
       averageScore: 0,
-      bestScore: 0
+      bestScore: 0,
+      standardQuizzes: {
+        total: 0,
+        averageScore: 0,
+        bestScore: 0
+      },
+      dynamicQuizzes: {
+        total: 0,
+        averageScore: 0,
+        bestScore: 0,
+        totalWins: 0
+      }
     };
   }
 };
+

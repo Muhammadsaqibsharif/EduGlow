@@ -10,7 +10,8 @@ const QuizConfiguration = () => {
     subject: 'Mathematics',
     topic: '',
     numberOfQuestions: 10,
-    difficulty: 'Medium'
+    difficulty: 'Medium',
+    quizMode: 'standard' // 'standard' or 'dynamic'
   });
   const [errors, setErrors] = useState({});
 
@@ -28,6 +29,10 @@ const QuizConfiguration = () => {
 
   const questionOptions = [5, 10, 15, 20];
   const difficultyLevels = ['Easy', 'Medium', 'Hard'];
+  const quizModes = [
+    { value: 'standard', label: 'Standard Quiz', description: 'Fixed number of questions at selected difficulty' },
+    { value: 'dynamic', label: 'Dynamic Quiz', description: 'Adaptive difficulty - reach 5 correct in a row to win!' }
+  ];
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -67,6 +72,15 @@ const QuizConfiguration = () => {
     setLoading(true);
 
     try {
+      // For dynamic mode, navigate directly without pre-generating questions
+      if (config.quizMode === 'dynamic') {
+        navigate('/quiz/dynamic', {
+          state: { config }
+        });
+        return;
+      }
+
+      // Standard mode - generate all questions upfront
       const questions = await generateQuizQuestions({
         subject: config.subject,
         topic: config.topic,
@@ -103,6 +117,49 @@ const QuizConfiguration = () => {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Quiz Mode Selection */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-3">
+                Quiz Mode
+              </label>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {quizModes.map((mode) => (
+                  <button
+                    key={mode.value}
+                    type="button"
+                    onClick={() => setConfig(prev => ({ ...prev, quizMode: mode.value }))}
+                    className={`p-4 rounded-lg border-2 text-left transition-all ${
+                      config.quizMode === mode.value
+                        ? 'border-blue-500 bg-blue-50'
+                        : 'border-gray-200 hover:border-gray-300 bg-white'
+                    }`}
+                  >
+                    <div className="flex items-start">
+                      <div className={`flex-shrink-0 w-6 h-6 rounded-full border-2 mr-3 mt-0.5 ${
+                        config.quizMode === mode.value
+                          ? 'border-blue-500 bg-blue-500'
+                          : 'border-gray-300'
+                      }`}>
+                        {config.quizMode === mode.value && (
+                          <svg className="w-full h-full text-white" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                          </svg>
+                        )}
+                      </div>
+                      <div className="flex-1">
+                        <h3 className={`font-semibold mb-1 ${
+                          config.quizMode === mode.value ? 'text-blue-900' : 'text-gray-900'
+                        }`}>
+                          {mode.label}
+                        </h3>
+                        <p className="text-sm text-gray-600">{mode.description}</p>
+                      </div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+
             {/* Subject Selection */}
             <div>
               <label htmlFor="subject" className="block text-sm font-medium text-gray-700 mb-2">
@@ -145,30 +202,32 @@ const QuizConfiguration = () => {
               )}
             </div>
 
-            {/* Number of Questions */}
-            <div>
-              <label htmlFor="numberOfQuestions" className="block text-sm font-medium text-gray-700 mb-2">
-                Number of Questions
-              </label>
-              <select
-                id="numberOfQuestions"
-                name="numberOfQuestions"
-                value={config.numberOfQuestions}
-                onChange={handleChange}
-                className="input-field"
-              >
-                {questionOptions.map((num) => (
-                  <option key={num} value={num}>
-                    {num} Questions
-                  </option>
-                ))}
-              </select>
-            </div>
+            {/* Number of Questions - Only for standard mode */}
+            {config.quizMode === 'standard' && (
+              <div>
+                <label htmlFor="numberOfQuestions" className="block text-sm font-medium text-gray-700 mb-2">
+                  Number of Questions
+                </label>
+                <select
+                  id="numberOfQuestions"
+                  name="numberOfQuestions"
+                  value={config.numberOfQuestions}
+                  onChange={handleChange}
+                  className="input-field"
+                >
+                  {questionOptions.map((num) => (
+                    <option key={num} value={num}>
+                      {num} Questions
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
 
-            {/* Difficulty Level */}
+            {/* Starting Difficulty Level */}
             <div>
               <label htmlFor="difficulty" className="block text-sm font-medium text-gray-700 mb-2">
-                Difficulty Level
+                {config.quizMode === 'dynamic' ? 'Starting Difficulty Level' : 'Difficulty Level'}
               </label>
               <select
                 id="difficulty"
@@ -183,6 +242,11 @@ const QuizConfiguration = () => {
                   </option>
                 ))}
               </select>
+              {config.quizMode === 'dynamic' && (
+                <p className="mt-1 text-sm text-gray-500">
+                  Difficulty will adjust based on your answers
+                </p>
+              )}
             </div>
 
             {/* Submit Button */}

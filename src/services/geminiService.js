@@ -84,3 +84,88 @@ Return ONLY the JSON array, no additional text.`;
     throw new Error('Failed to generate questions. Please check your API key and try again.');
   }
 };
+
+/**
+ * Generate a single quiz question with specific difficulty for dynamic quiz
+ * @param {Object} config - Question configuration
+ * @param {string} config.subject - Subject of the quiz
+ * @param {string} config.topic - Specific topic
+ * @param {string} config.difficulty - Difficulty level (Easy, Medium, Hard)
+ * @param {Array} config.previousQuestions - Array of previously asked questions to avoid duplicates
+ * @returns {Promise<Object>} Question object
+ */
+export const generateSingleQuestion = async ({ subject, topic, difficulty, previousQuestions = [] }) => {
+  try {
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+
+    // Build context about previous questions to avoid duplicates
+    const previousContext = previousQuestions.length > 0
+      ? `\n\nPreviously asked questions (DO NOT repeat these):\n${previousQuestions.map((q, i) => `${i + 1}. ${q.question}`).join('\n')}`
+      : '';
+
+    const prompt = `Generate 1 multiple choice question about ${topic} in ${subject} at ${difficulty} difficulty level.
+
+Requirements:
+- The question must have exactly 4 options (A, B, C, D)
+- Only one correct answer
+- Include a brief explanation for the correct answer
+- Question should be clear and unambiguous
+- Make it DIFFERENT from any previously asked questions${previousContext}
+
+Difficulty Guidelines:
+- Easy: Basic concepts, straightforward questions
+- Medium: Requires understanding and application of concepts
+- Hard: Complex scenarios, critical thinking, advanced concepts
+
+JSON Format:
+{
+  "question": "Question text here?",
+  "options": ["Option A", "Option B", "Option C", "Option D"],
+  "correctAnswer": 0,
+  "explanation": "Brief explanation why this is correct",
+  "difficulty": "${difficulty}"
+}
+
+Return ONLY the JSON object, no additional text.`;
+
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    const text = response.text();
+
+    // Extract JSON from response
+    let jsonText = text.trim();
+    
+    // Remove markdown code blocks if present
+    if (jsonText.startsWith('```json')) {
+      jsonText = jsonText.replace(/```json\n?/, '').replace(/\n?```$/, '');
+    } else if (jsonText.startsWith('```')) {
+      jsonText = jsonText.replace(/```\n?/, '').replace(/\n?```$/, '');
+    }
+
+    // Parse JSON
+    const question = JSON.parse(jsonText);
+
+    // Validate the structure
+    if (!question.question || !Array.isArray(question.options) || question.options.length !== 4 || 
+        typeof question.correctAnswer !== 'number' || !question.explanation) {
+      throw new Error('Invalid question format');
+    }
+
+    return question;
+  } catch (error) {
+    console.error('Error generating single question:', error);
+    
+    // Retry once if parsing failed
+    if (error.message.includes('JSON') || error.message.includes('format')) {
+      try {
+        console.log('Retrying question generation...');
+        return await generateSingleQuestion({ subject, topic, difficulty, previousQuestions });
+      } catch (retryError) {
+        throw new Error('Failed to generate valid question after retry. Please try again.');
+      }
+    }
+    
+    throw new Error('Failed to generate question. Please try again.');
+  }
+};
+

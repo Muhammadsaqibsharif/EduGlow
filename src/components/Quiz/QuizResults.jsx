@@ -11,7 +11,17 @@ const QuizResults = () => {
     return null;
   }
 
-  const { questions, userAnswers, score, totalQuestions, timeTaken, subject, topic, difficulty } = quizData;
+  const isDynamic = quizData.isDynamic || quizData.quizType === 'dynamic';
+  
+  // Handle both standard and dynamic quiz data structures
+  const questions = isDynamic ? quizData.questions : quizData.questions;
+  const userAnswers = isDynamic ? quizData.questions.map(q => q.userAnswer) : quizData.userAnswers;
+  const score = quizData.score || quizData.correctAnswers;
+  const totalQuestions = quizData.totalQuestions;
+  const timeTaken = quizData.timeTaken;
+  const subject = quizData.subject;
+  const topic = quizData.topic;
+  const difficulty = isDynamic ? quizData.startingDifficulty : quizData.difficulty;
   
   const percentage = Math.round((score / totalQuestions) * 100);
   const passed = percentage >= 60;
@@ -49,10 +59,22 @@ const QuizResults = () => {
         {/* Score Card */}
         <div className="card mb-6">
           <div className="text-center">
+            {isDynamic && (
+              <div className="mb-4">
+                <span className="inline-block px-4 py-2 bg-purple-100 text-purple-800 rounded-full text-sm font-semibold">
+                  🎯 Dynamic Quiz {quizData.completed ? '- Won! 🎉' : ''}
+                </span>
+              </div>
+            )}
+            
             <div className={`inline-flex items-center justify-center w-24 h-24 rounded-full mb-4 ${
-              passed ? 'bg-green-100' : 'bg-red-100'
+              isDynamic && quizData.completed ? 'bg-purple-100' : passed ? 'bg-green-100' : 'bg-red-100'
             }`}>
-              {passed ? (
+              {isDynamic && quizData.completed ? (
+                <svg className="w-12 h-12 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+                </svg>
+              ) : passed ? (
                 <svg className="w-12 h-12 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
@@ -64,20 +86,33 @@ const QuizResults = () => {
             </div>
 
             <h1 className="text-4xl font-bold text-gray-900 mb-2">
-              Your Score: {score}/{totalQuestions}
+              {isDynamic ? 'Questions Answered:' : 'Your Score:'} {score}/{totalQuestions}
             </h1>
             <p className={`text-3xl font-semibold mb-4 ${
-              passed ? 'text-green-600' : 'text-red-600'
+              isDynamic && quizData.completed ? 'text-purple-600' : passed ? 'text-green-600' : 'text-red-600'
             }`}>
               {percentage}%
             </p>
+
+            {isDynamic && (
+              <div className="mb-4 p-4 bg-blue-50 rounded-lg inline-block">
+                <p className="text-lg font-semibold text-blue-900">
+                  Final Streak: <span className="text-2xl">{quizData.finalStreak}</span>
+                </p>
+                {quizData.completed && (
+                  <p className="text-sm text-blue-700 mt-1">
+                    🏆 You achieved 5 correct answers in a row!
+                  </p>
+                )}
+              </div>
+            )}
 
             <div className="flex justify-center space-x-8 text-sm text-gray-600">
               <div>
                 <span className="font-semibold">Time Taken:</span> {formatTime(timeTaken)}
               </div>
               <div>
-                <span className="font-semibold">Difficulty:</span> {difficulty}
+                <span className="font-semibold">{isDynamic ? 'Starting' : ''} Difficulty:</span> {difficulty}
               </div>
               <div>
                 <span className="font-semibold">Accuracy:</span> {percentage}%
@@ -87,6 +122,7 @@ const QuizResults = () => {
             <div className="mt-6 p-4 bg-gray-50 rounded-lg">
               <p className="text-sm text-gray-700">
                 <span className="font-semibold">{subject}</span> - {topic}
+                {isDynamic && <span className="ml-2 text-purple-600 font-semibold">(Dynamic Mode)</span>}
               </p>
             </div>
           </div>
@@ -123,8 +159,9 @@ const QuizResults = () => {
           <div className="space-y-6">
             {questions.map((question, index) => {
               const userAnswer = userAnswers[index];
-              const isCorrect = userAnswer === question.correctAnswer;
+              const isCorrect = isDynamic ? question.wasCorrect : (userAnswer === question.correctAnswer);
               const optionLabels = ['A', 'B', 'C', 'D'];
+              const questionDifficulty = isDynamic ? question.difficulty : difficulty;
 
               return (
                 <div 
@@ -148,9 +185,20 @@ const QuizResults = () => {
                       )}
                     </div>
                     <div className="flex-1">
-                      <h3 className="text-lg font-semibold text-gray-900 mb-3">
-                        Question {index + 1}: {question.question}
-                      </h3>
+                      <div className="flex items-center justify-between mb-2">
+                        <h3 className="text-lg font-semibold text-gray-900">
+                          Question {index + 1}: {question.question}
+                        </h3>
+                        {isDynamic && (
+                          <span className={`ml-2 px-2 py-1 rounded text-xs font-semibold ${
+                            questionDifficulty === 'Easy' ? 'bg-green-100 text-green-800' :
+                            questionDifficulty === 'Medium' ? 'bg-yellow-100 text-yellow-800' :
+                            'bg-red-100 text-red-800'
+                          }`}>
+                            {questionDifficulty}
+                          </span>
+                        )}
+                      </div>
 
                       <div className="space-y-2 mb-3">
                         {question.options.map((option, optionIndex) => {

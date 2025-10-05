@@ -18,6 +18,7 @@ import QuizHistory from './components/Dashboard/QuizHistory';
 // Quiz Components
 import QuizConfiguration from './components/Quiz/QuizConfiguration';
 import QuizTaking from './components/Quiz/QuizTaking';
+import DynamicQuizTaking from './components/Quiz/DynamicQuizTaking';
 import QuizResults from './components/Quiz/QuizResults';
 
 function App() {
@@ -105,6 +106,16 @@ function App() {
                 <ProtectedRoute>
                   <Navbar />
                   <QuizTaking />
+                </ProtectedRoute>
+              }
+            />
+            
+            <Route
+              path="/quiz/dynamic"
+              element={
+                <ProtectedRoute>
+                  <Navbar />
+                  <DynamicQuizTaking />
                 </ProtectedRoute>
               }
             />
