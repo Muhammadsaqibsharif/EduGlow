@@ -2,6 +2,9 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from './context/AuthContext';
 
+// Home Component
+import HomePage from './components/Home/HomePage';
+
 // Layout Components
 import Navbar from './components/Layout/Navbar';
 import ProtectedRoute from './components/Layout/ProtectedRoute';
@@ -56,12 +59,12 @@ function App() {
           
           <Routes>
             {/* Public Routes */}
+            <Route path="/" element={<HomePage />} />
             <Route path="/signup" element={<SignUp />} />
             <Route path="/login" element={<Login />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             
             {/* Protected Routes */}
-            <Route path="/" element={<Navigate to="/dashboard" replace />} />
             
             <Route
               path="/dashboard"
@@ -164,7 +167,7 @@ function App() {
             />
 
             {/* 404 Route */}
-            <Route path="*" element={<Navigate to="/dashboard" replace />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </div>
       </Router>

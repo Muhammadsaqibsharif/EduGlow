@@ -6,7 +6,7 @@ export default defineConfig({
   plugins: [react()],
   server: {
     allowedHosts: [
-      'arabic-man-clicks-rocks.trycloudflare.com'
+      'graphical-vote-talked-closer.trycloudflare.com'
     ]
   }
 })
