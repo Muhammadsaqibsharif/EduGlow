@@ -31,7 +31,8 @@ const QuizConfiguration = () => {
   const difficultyLevels = ['Easy', 'Medium', 'Hard'];
   const quizModes = [
     { value: 'standard', label: 'Standard Quiz', description: 'Fixed number of questions at selected difficulty' },
-    { value: 'dynamic', label: 'Dynamic Quiz', description: 'Adaptive difficulty - reach 5 correct in a row to win!' }
+    { value: 'dynamic', label: 'Dynamic Quiz', description: 'Adaptive difficulty - reach 5 correct in a row to win!' },
+    { value: 'endless', label: 'Endless Mode 🎮', description: 'Start easy, get harder. One wrong answer ends the game!' }
   ];
 
   const handleChange = (e) => {
@@ -80,6 +81,14 @@ const QuizConfiguration = () => {
         return;
       }
 
+      // For endless mode, navigate directly without pre-generating questions
+      if (config.quizMode === 'endless') {
+        navigate('/quiz/endless', {
+          state: { config }
+        });
+        return;
+      }
+
       // Standard mode - generate all questions upfront
       const questions = await generateQuizQuestions({
         subject: config.subject,
@@ -122,7 +131,7 @@ const QuizConfiguration = () => {
               <label className="block text-sm font-medium text-gray-700 mb-3">
                 Quiz Mode
               </label>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {quizModes.map((mode) => (
                   <button
                     key={mode.value}
@@ -224,30 +233,47 @@ const QuizConfiguration = () => {
               </div>
             )}
 
-            {/* Starting Difficulty Level */}
-            <div>
-              <label htmlFor="difficulty" className="block text-sm font-medium text-gray-700 mb-2">
-                {config.quizMode === 'dynamic' ? 'Starting Difficulty Level' : 'Difficulty Level'}
-              </label>
-              <select
-                id="difficulty"
-                name="difficulty"
-                value={config.difficulty}
-                onChange={handleChange}
-                className="input-field"
-              >
-                {difficultyLevels.map((level) => (
-                  <option key={level} value={level}>
-                    {level}
-                  </option>
-                ))}
-              </select>
-              {config.quizMode === 'dynamic' && (
-                <p className="mt-1 text-sm text-gray-500">
-                  Difficulty will adjust based on your answers
-                </p>
-              )}
-            </div>
+            {/* Starting Difficulty Level - Not shown for endless mode */}
+            {config.quizMode !== 'endless' && (
+              <div>
+                <label htmlFor="difficulty" className="block text-sm font-medium text-gray-700 mb-2">
+                  {config.quizMode === 'dynamic' ? 'Starting Difficulty Level' : 'Difficulty Level'}
+                </label>
+                <select
+                  id="difficulty"
+                  name="difficulty"
+                  value={config.difficulty}
+                  onChange={handleChange}
+                  className="input-field"
+                >
+                  {difficultyLevels.map((level) => (
+                    <option key={level} value={level}>
+                      {level}
+                    </option>
+                  ))}
+                </select>
+                {config.quizMode === 'dynamic' && (
+                  <p className="mt-1 text-sm text-gray-500">
+                    Difficulty will adjust based on your answers
+                  </p>
+                )}
+              </div>
+            )}
+
+            {/* Endless Mode Info */}
+            {config.quizMode === 'endless' && (
+              <div className="bg-gradient-to-r from-purple-50 to-blue-50 border border-purple-200 rounded-lg p-4">
+                <h4 className="font-semibold text-purple-900 mb-2">🎮 Endless Mode Rules</h4>
+                <ul className="space-y-1 text-sm text-purple-800">
+                  <li>• Questions start super easy and gradually get harder</li>
+                  <li>• Easy: Questions 1-5</li>
+                  <li>• Medium: Questions 6-10</li>
+                  <li>• Hard: Questions 11+</li>
+                  <li>• One wrong answer ends the game!</li>
+                  <li>• Compete on the leaderboard for the highest score</li>
+                </ul>
+              </div>
+            )}
 
             {/* Submit Button */}
             <div className="pt-4">

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { getUserQuizzes, getUserStats } from '../../services/quizService';
+import { getUserQuizzes, getUserStats, getUserBestEndlessScore } from '../../services/quizService';
 import toast from 'react-hot-toast';
 
 const Dashboard = () => {
@@ -12,6 +12,7 @@ const Dashboard = () => {
     averageScore: 0,
     bestScore: 0
   });
+  const [bestEndlessScore, setBestEndlessScore] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -21,12 +22,14 @@ const Dashboard = () => {
   const loadDashboardData = async () => {
     try {
       setLoading(true);
-      const [quizzes, userStats] = await Promise.all([
+      const [quizzes, userStats, endlessScore] = await Promise.all([
         getUserQuizzes(currentUser.uid, 5),
-        getUserStats(currentUser.uid)
+        getUserStats(currentUser.uid),
+        getUserBestEndlessScore(currentUser.uid)
       ]);
       setRecentQuizzes(quizzes);
       setStats(userStats);
+      setBestEndlessScore(endlessScore);
     } catch (error) {
       console.error('Error loading dashboard:', error);
       toast.error('Failed to load dashboard data');
@@ -177,13 +180,51 @@ const Dashboard = () => {
           </div>
         )}
 
-        {/* Start New Quiz Button */}
-        <div className="mb-8">
+        {/* Endless Mode Highlight */}
+        {bestEndlessScore && (
+          <div className="mb-8 card bg-gradient-to-br from-purple-600 to-blue-600 text-white border-0">
+            <div className="flex flex-col md:flex-row items-center justify-between">
+              <div className="mb-4 md:mb-0">
+                <h3 className="text-2xl font-bold mb-2 flex items-center">
+                  🎮 Your Best Endless Mode Score
+                </h3>
+                <p className="text-purple-100 mb-3">
+                  {bestEndlessScore.subject} - {bestEndlessScore.topic}
+                </p>
+                <div className="flex items-center space-x-6">
+                  <div>
+                    <div className="text-4xl font-bold">{bestEndlessScore.correctAnswers}</div>
+                    <div className="text-sm text-purple-100">Questions Correct</div>
+                  </div>
+                  <div>
+                    <div className="text-2xl font-bold">{bestEndlessScore.finalDifficulty}</div>
+                    <div className="text-sm text-purple-100">Final Difficulty</div>
+                  </div>
+                </div>
+              </div>
+              <Link
+                to="/leaderboard"
+                className="bg-white text-purple-600 hover:bg-purple-50 font-bold py-3 px-6 rounded-lg transition-colors whitespace-nowrap"
+              >
+                View Leaderboard 🏆
+              </Link>
+            </div>
+          </div>
+        )}
+
+        {/* Start New Quiz Buttons */}
+        <div className="mb-8 grid grid-cols-1 md:grid-cols-2 gap-4">
           <Link
             to="/quiz/configure"
-            className="block w-full sm:w-auto text-center bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-bold py-4 px-8 rounded-lg shadow-lg transition-all duration-200 transform hover:scale-105"
+            className="block text-center bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-bold py-4 px-8 rounded-lg shadow-lg transition-all duration-200 transform hover:scale-105"
           >
-            <span className="text-xl">Start New Quiz</span>
+            <span className="text-xl">📝 Start Standard/Dynamic Quiz</span>
+          </Link>
+          <Link
+            to="/leaderboard"
+            className="block text-center bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white font-bold py-4 px-8 rounded-lg shadow-lg transition-all duration-200 transform hover:scale-105"
+          >
+            <span className="text-xl">🏆 View Endless Leaderboard</span>
           </Link>
         </div>
 

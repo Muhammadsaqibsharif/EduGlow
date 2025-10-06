@@ -299,3 +299,140 @@ export const getUserStats = async (userId) => {
   }
 };
 
+/**
+ * Save a completed endless quiz to Firestore
+ * @param {Object} quizData - Endless quiz data to save
+ * @returns {Promise<string>} Quiz document ID
+ */
+export const saveEndlessQuiz = async (quizData) => {
+  try {
+    const quizRef = await addDoc(collection(db, 'endlessQuizzes'), {
+      ...quizData,
+      quizType: 'endless',
+      completedAt: serverTimestamp()
+    });
+
+    return quizRef.id;
+  } catch (error) {
+    console.error('Error saving endless quiz:', error);
+    throw new Error('Failed to save quiz. Please try again.');
+  }
+};
+
+/**
+ * Get endless quiz leaderboard
+ * @param {string} subject - Subject filter (null for all)
+ * @param {string} topic - Topic filter (null for all)
+ * @param {number} limitCount - Maximum number of entries to fetch
+ * @returns {Promise<Array>} Array of leaderboard entries
+ */
+export const getEndlessLeaderboard = async (subject = null, topic = null, limitCount = 50) => {
+  try {
+    let q;
+    
+    if (subject && topic) {
+      // Filter by both subject and topic
+      q = query(
+        collection(db, 'endlessQuizzes'),
+        where('subject', '==', subject),
+        where('topic', '==', topic),
+        orderBy('correctAnswers', 'desc'),
+        orderBy('timeTaken', 'asc'),
+        limit(limitCount)
+      );
+    } else if (subject) {
+      // Filter by subject only
+      q = query(
+        collection(db, 'endlessQuizzes'),
+        where('subject', '==', subject),
+        orderBy('correctAnswers', 'desc'),
+        orderBy('timeTaken', 'asc'),
+        limit(limitCount)
+      );
+    } else {
+      // No filter - all entries
+      q = query(
+        collection(db, 'endlessQuizzes'),
+        orderBy('correctAnswers', 'desc'),
+        orderBy('timeTaken', 'asc'),
+        limit(limitCount)
+      );
+    }
+
+    const querySnapshot = await getDocs(q);
+    const leaderboard = [];
+    
+    querySnapshot.forEach((doc) => {
+      leaderboard.push({
+        id: doc.id,
+        ...doc.data()
+      });
+    });
+
+    return leaderboard;
+  } catch (error) {
+    console.error('Error fetching endless leaderboard:', error);
+    throw new Error('Failed to load leaderboard.');
+  }
+};
+
+/**
+ * Get all unique topics from endless quizzes
+ * @returns {Promise<Array>} Array of unique topics with their subjects
+ */
+export const getAllEndlessTopics = async () => {
+  try {
+    const q = query(collection(db, 'endlessQuizzes'));
+    const querySnapshot = await getDocs(q);
+    
+    const topicsMap = new Map();
+    
+    querySnapshot.forEach((doc) => {
+      const data = doc.data();
+      const key = `${data.subject}-${data.topic}`;
+      if (!topicsMap.has(key)) {
+        topicsMap.set(key, {
+          subject: data.subject,
+          topic: data.topic
+        });
+      }
+    });
+
+    return Array.from(topicsMap.values());
+  } catch (error) {
+    console.error('Error fetching endless topics:', error);
+    return [];
+  }
+};
+
+/**
+ * Get user's best endless quiz score
+ * @param {string} userId - User ID
+ * @returns {Promise<Object>} Best score data
+ */
+export const getUserBestEndlessScore = async (userId) => {
+  try {
+    const q = query(
+      collection(db, 'endlessQuizzes'),
+      where('userId', '==', userId),
+      orderBy('correctAnswers', 'desc'),
+      limit(1)
+    );
+
+    const querySnapshot = await getDocs(q);
+    
+    if (querySnapshot.empty) {
+      return null;
+    }
+
+    const doc = querySnapshot.docs[0];
+    return {
+      id: doc.id,
+      ...doc.data()
+    };
+  } catch (error) {
+    console.error('Error fetching user best endless score:', error);
+    return null;
+  }
+};
+

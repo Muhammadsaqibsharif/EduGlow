@@ -19,7 +19,10 @@ import QuizHistory from './components/Dashboard/QuizHistory';
 import QuizConfiguration from './components/Quiz/QuizConfiguration';
 import QuizTaking from './components/Quiz/QuizTaking';
 import DynamicQuizTaking from './components/Quiz/DynamicQuizTaking';
+import EndlessQuizTaking from './components/Quiz/EndlessQuizTaking';
 import QuizResults from './components/Quiz/QuizResults';
+import EndlessQuizResults from './components/Quiz/EndlessQuizResults';
+import EndlessLeaderboard from './components/Quiz/EndlessLeaderboard';
 
 function App() {
   return (
@@ -121,11 +124,41 @@ function App() {
             />
             
             <Route
+              path="/quiz/endless"
+              element={
+                <ProtectedRoute>
+                  <Navbar />
+                  <EndlessQuizTaking />
+                </ProtectedRoute>
+              }
+            />
+            
+            <Route
               path="/quiz/results"
               element={
                 <ProtectedRoute>
                   <Navbar />
                   <QuizResults />
+                </ProtectedRoute>
+              }
+            />
+            
+            <Route
+              path="/quiz/endless/results"
+              element={
+                <ProtectedRoute>
+                  <Navbar />
+                  <EndlessQuizResults />
+                </ProtectedRoute>
+              }
+            />
+            
+            <Route
+              path="/leaderboard"
+              element={
+                <ProtectedRoute>
+                  <Navbar />
+                  <EndlessLeaderboard />
                 </ProtectedRoute>
               }
             />
