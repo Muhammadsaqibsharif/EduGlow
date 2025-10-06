@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { saveQuiz } from '../../services/quizService';
+import { generateHint } from '../../services/geminiService';
 import ProgressBar from './ProgressBar';
 import toast from 'react-hot-toast';
 
@@ -17,6 +18,10 @@ const QuizTaking = () => {
   const [selectedOption, setSelectedOption] = useState(null);
   const [startTime] = useState(Date.now());
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // Hint states
+  const [hints, setHints] = useState({}); // { questionIndex: [hint1, hint2, hint3] }
+  const [isLoadingHint, setIsLoadingHint] = useState(false);
 
   useEffect(() => {
     if (!questions || questions.length === 0) {
@@ -61,6 +66,43 @@ const QuizTaking = () => {
   const handlePrevious = () => {
     if (!isFirstQuestion) {
       setCurrentQuestionIndex(prev => prev - 1);
+    }
+  };
+
+  const handleGetHint = async () => {
+    if (isLoadingHint) return;
+
+    const currentHints = hints[currentQuestionIndex] || [];
+    
+    if (currentHints.length >= 3) {
+      toast.error('You have used all 3 hints for this question');
+      return;
+    }
+
+    setIsLoadingHint(true);
+    const loadingToast = toast.loading('Generating hint...');
+
+    try {
+      const hint = await generateHint({
+        question: currentQuestion.question,
+        options: currentQuestion.options,
+        correctAnswer: currentQuestion.correctAnswer,
+        hintNumber: currentHints.length + 1,
+        previousHints: currentHints
+      });
+
+      const updatedHints = {
+        ...hints,
+        [currentQuestionIndex]: [...currentHints, hint]
+      };
+      setHints(updatedHints);
+
+      toast.success(`Hint ${currentHints.length + 1} generated!`, { id: loadingToast });
+    } catch (error) {
+      console.error('Error getting hint:', error);
+      toast.error('Failed to generate hint', { id: loadingToast });
+    } finally {
+      setIsLoadingHint(false);
     }
   };
 
@@ -177,7 +219,7 @@ const QuizTaking = () => {
             </h3>
           </div>
 
-          <div className="space-y-3 mb-8">
+          <div className="space-y-3 mb-6">
             {currentQuestion.options.map((option, index) => (
               <button
                 key={index}
@@ -210,6 +252,50 @@ const QuizTaking = () => {
                 </div>
               </button>
             ))}
+          </div>
+
+          {/* Hint Section */}
+          <div className="mb-8">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center space-x-2">
+                <svg className="w-5 h-5 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M11 3a1 1 0 10-2 0v1a1 1 0 102 0V3zM15.657 5.757a1 1 0 00-1.414-1.414l-.707.707a1 1 0 001.414 1.414l.707-.707zM18 10a1 1 0 01-1 1h-1a1 1 0 110-2h1a1 1 0 011 1zM5.05 6.464A1 1 0 106.464 5.05l-.707-.707a1 1 0 00-1.414 1.414l.707.707zM5 10a1 1 0 01-1 1H3a1 1 0 110-2h1a1 1 0 011 1zM8 16v-1h4v1a2 2 0 11-4 0zM12 14c.015-.34.208-.646.477-.859a4 4 0 10-4.954 0c.27.213.462.519.476.859h4.002z" />
+                </svg>
+                <span className="font-semibold text-gray-700">Need Help?</span>
+              </div>
+              <button
+                onClick={handleGetHint}
+                disabled={isLoadingHint || isSubmitting || (hints[currentQuestionIndex]?.length >= 3)}
+                className="btn-secondary text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isLoadingHint ? (
+                  <span className="flex items-center">
+                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Loading...
+                  </span>
+                ) : (
+                  `Get Hint (${hints[currentQuestionIndex]?.length || 0}/3)`
+                )}
+              </button>
+            </div>
+            
+            {hints[currentQuestionIndex]?.length > 0 && (
+              <div className="space-y-2">
+                {hints[currentQuestionIndex].map((hint, index) => (
+                  <div key={index} className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                    <div className="flex items-start">
+                      <span className="flex-shrink-0 inline-flex items-center justify-center w-6 h-6 rounded-full bg-yellow-500 text-white text-xs font-bold mr-2">
+                        {index + 1}
+                      </span>
+                      <p className="text-sm text-gray-700 flex-1">{hint}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           <div className="flex justify-between items-center pt-4 border-t">

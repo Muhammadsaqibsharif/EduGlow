@@ -169,3 +169,58 @@ Return ONLY the JSON object, no additional text.`;
   }
 };
 
+/**
+ * Generate a hint for a quiz question using Gemini
+ * @param {Object} params - Hint generation parameters
+ * @param {string} params.question - The question text
+ * @param {Array<string>} params.options - The answer options
+ * @param {number} params.correctAnswer - Index of the correct answer
+ * @param {number} params.hintNumber - Which hint this is (1-3)
+ * @param {Array<string>} params.previousHints - Previously generated hints
+ * @returns {Promise<string>} Hint text
+ */
+export const generateHint = async ({ question, options, correctAnswer, hintNumber, previousHints = [] }) => {
+  try {
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+
+    const previousHintsContext = previousHints.length > 0
+      ? `\n\nPreviously given hints (provide a NEW hint):\n${previousHints.map((h, i) => `Hint ${i + 1}: ${h}`).join('\n')}`
+      : '';
+
+    const hintLevel = hintNumber === 1 ? 'subtle' : hintNumber === 2 ? 'moderate' : 'strong';
+
+    const prompt = `Provide a ${hintLevel} hint for this multiple choice question without revealing the answer directly.
+
+Question: ${question}
+
+Options:
+${options.map((opt, idx) => `${String.fromCharCode(65 + idx)}. ${opt}`).join('\n')}
+
+The correct answer is: ${options[correctAnswer]}
+
+Guidelines for hint level:
+- Hint 1 (subtle): Give a general direction or concept to consider
+- Hint 2 (moderate): Eliminate one wrong option or provide more specific context
+- Hint 3 (strong): Narrow it down significantly, but still don't give the exact answer${previousHintsContext}
+
+IMPORTANT: 
+- DO NOT directly state which option is correct
+- DO NOT say "the answer is..." or "option X is correct"
+- Guide the user's thinking process
+- Keep it concise (1-2 sentences)
+- Make it progressively more helpful based on hint number
+
+Return ONLY the hint text, no additional formatting or labels.`;
+
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    const hint = response.text().trim();
+
+    // Remove any quote marks that might wrap the hint
+    return hint.replace(/^["']|["']$/g, '');
+  } catch (error) {
+    console.error('Error generating hint:', error);
+    throw new Error('Failed to generate hint. Please try again.');
+  }
+};
+
