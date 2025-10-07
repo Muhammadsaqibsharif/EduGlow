@@ -1,0 +1,51 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+    
+    // Users collection rules
+    match /users/{userId} {
+      // Users can read and write their own data
+      allow read, write: if isAuthenticated() && isOwner(userId);
+      
+      // Allow creation of user document on signup
+      allow create: if isAuthenticated() && isOwner(userId);
+    }
+    
+    // Quizzes collection rules
+    match /quizzes/{quizId} {
+      // Users can only read their own quizzes
+      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      
+      // Users can only create quizzes with their own userId
+      allow create: if isAuthenticated() 
+                    && request.resource.data.userId == request.auth.uid
+                    && request.resource.data.keys().hasAll(['userId', 'subject', 'topic', 'difficulty', 'numberOfQuestions', 'questions', 'userAnswers', 'score', 'totalQuestions', 'timeTaken']);
+      
+      // Users cannot update or delete quizzes (immutable records)
+      allow update, delete: if false;
+    }
+    
+    // Endless Quizzes collection rules
+    match /endlessQuizzes/{quizId} {
+      // Anyone authenticated can read endless quizzes for leaderboard
+      allow read: if isAuthenticated();
+      
+      // Users can only create endless quizzes with their own userId
+      allow create: if isAuthenticated() 
+                    && request.resource.data.userId == request.auth.uid
+                    && request.resource.data.keys().hasAll(['userId', 'userName', 'subject', 'topic', 'questions', 'correctAnswers', 'totalQuestions', 'finalDifficulty', 'timeTaken']);
+      
+      // Users cannot update or delete endless quizzes (immutable records)
+      allow update, delete: if false;
+    }
+  }
+}
