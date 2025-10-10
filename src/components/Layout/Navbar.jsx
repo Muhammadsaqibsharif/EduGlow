@@ -25,9 +25,7 @@ const Navbar = () => {
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center">
             <Link to="/dashboard" className="flex items-center space-x-2">
-              <div className="w-10 h-10 bg-gradient-to-br from-primary-500 to-primary-700 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-xl">EG</span>
-              </div>
+              <img src="/logo-icon.svg" alt="EduGlow" className="w-10 h-10" />
               <span className="text-xl font-bold text-gray-900">EduGlow</span>
             </Link>
           </div>
@@ -35,15 +33,17 @@ const Navbar = () => {
           <div className="flex items-center space-x-4">
             <Link 
               to="/dashboard" 
-              className="text-gray-700 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+              className="flex items-center space-x-1 text-gray-700 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium transition-colors"
             >
-              Dashboard
+              <img src="/quiz-icon.svg" alt="" className="w-4 h-4" />
+              <span>Dashboard</span>
             </Link>
             <Link 
               to="/quiz-history" 
-              className="text-gray-700 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+              className="flex items-center space-x-1 text-gray-700 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium transition-colors"
             >
-              History
+              <img src="/history-icon.svg" alt="" className="w-4 h-4" />
+              <span>History</span>
             </Link>
             <Link 
               to="/leaderboard" 

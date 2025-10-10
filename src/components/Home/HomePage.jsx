@@ -114,9 +114,63 @@ const HomePage = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center">
-                <SparklesIcon className="w-6 h-6 text-white" />
-              </div>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 220" className="w-10 h-10">
+                <defs>
+                  <linearGradient id="neonGradient" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0%" stopColor="#8B5CF6">
+                      <animate attributeName="stop-color" values="#8B5CF6;#06B6D4;#22C55E;#8B5CF6" dur="5s" repeatCount="indefinite" />
+                    </stop>
+                    <stop offset="100%" stopColor="#06B6D4">
+                      <animate attributeName="stop-color" values="#06B6D4;#22C55E;#8B5CF6;#06B6D4" dur="5s" repeatCount="indefinite" />
+                    </stop>
+                  </linearGradient>
+
+                  <filter id="neonGlow" x="-40%" y="-40%" width="180%" height="180%">
+                    <feGaussianBlur in="SourceGraphic" stdDeviation="8" result="blur"/>
+                    <feMerge>
+                      <feMergeNode in="blur"/>
+                      <feMergeNode in="SourceGraphic"/>
+                    </feMerge>
+                  </filter>
+
+                  <filter id="sparkGlow">
+                    <feGaussianBlur stdDeviation="3" result="blur"/>
+                    <feMerge>
+                      <feMergeNode in="blur"/>
+                      <feMergeNode in="SourceGraphic"/>
+                    </feMerge>
+                  </filter>
+                </defs>
+
+                <circle cx="110" cy="110" r="80" fill="none" stroke="url(#neonGradient)" strokeWidth="3" opacity="0.5">
+                  <animate attributeName="r" values="78;84;78" dur="2s" repeatCount="indefinite" />
+                  <animate attributeName="opacity" values="0.4;0.9;0.4" dur="2s" repeatCount="indefinite" />
+                </circle>
+
+                <circle cx="110" cy="110" r="60" fill="none" stroke="url(#neonGradient)" strokeWidth="4" opacity="0.9" strokeDasharray="10 8">
+                  <animateTransform attributeName="transform" type="rotate" from="0 110 110" to="360 110 110" dur="5s" repeatCount="indefinite"/>
+                </circle>
+
+                <circle cx="110" cy="110" r="45" fill="url(#neonGradient)" filter="url(#neonGlow)" opacity="0.9">
+                  <animate attributeName="r" values="44;46;44" dur="1.8s" repeatCount="indefinite" />
+                </circle>
+
+                <g transform="translate(110,110)">
+                  <path d="M-25 -15q10 -5 25 0t25 0v25q-10 -5 -25 0t-25 0z" fill="white" opacity="0.2"/>
+                  <path d="M-25 -10q10 -5 25 0t25 0M-25 2q10 -5 25 0t25 0" stroke="#E0F2FE" strokeWidth="2" strokeLinecap="round" opacity="0.9"/>
+                </g>
+
+                <path d="M110 20 L115 40 L108 40 L113 60" stroke="#FACC15" strokeWidth="2" fill="none" filter="url(#sparkGlow)">
+                  <animate attributeName="opacity" values="0;1;0" dur="1s" repeatCount="indefinite"/>
+                </path>
+                <path d="M110 200 L105 180 L112 180 L107 160" stroke="#FACC15" strokeWidth="2" fill="none" filter="url(#sparkGlow)">
+                  <animate attributeName="opacity" values="0;1;0" dur="1s" begin="0.5s" repeatCount="indefinite"/>
+                </path>
+
+                <g transform="translate(110,110)">
+                  <animateTransform attributeName="transform" type="rotate" from="0" to="360" dur="12s" repeatCount="indefinite"/>
+                </g>
+              </svg>
               <span className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
                 EduGlow
               </span>
@@ -398,9 +452,63 @@ const HomePage = () => {
           <div className="grid md:grid-cols-3 gap-8 mb-8">
             <div>
               <div className="flex items-center space-x-3 mb-4">
-                <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center">
-                  <SparklesIcon className="w-6 h-6 text-white" />
-                </div>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 220" className="w-10 h-10">
+                  <defs>
+                    <linearGradient id="neonGradientFooter" x1="0" y1="0" x2="1" y2="1">
+                      <stop offset="0%" stopColor="#8B5CF6">
+                        <animate attributeName="stop-color" values="#8B5CF6;#06B6D4;#22C55E;#8B5CF6" dur="5s" repeatCount="indefinite" />
+                      </stop>
+                      <stop offset="100%" stopColor="#06B6D4">
+                        <animate attributeName="stop-color" values="#06B6D4;#22C55E;#8B5CF6;#06B6D4" dur="5s" repeatCount="indefinite" />
+                      </stop>
+                    </linearGradient>
+
+                    <filter id="neonGlowFooter" x="-40%" y="-40%" width="180%" height="180%">
+                      <feGaussianBlur in="SourceGraphic" stdDeviation="8" result="blur"/>
+                      <feMerge>
+                        <feMergeNode in="blur"/>
+                        <feMergeNode in="SourceGraphic"/>
+                      </feMerge>
+                    </filter>
+
+                    <filter id="sparkGlowFooter">
+                      <feGaussianBlur stdDeviation="3" result="blur"/>
+                      <feMerge>
+                        <feMergeNode in="blur"/>
+                        <feMergeNode in="SourceGraphic"/>
+                      </feMerge>
+                    </filter>
+                  </defs>
+
+                  <circle cx="110" cy="110" r="80" fill="none" stroke="url(#neonGradientFooter)" strokeWidth="3" opacity="0.5">
+                    <animate attributeName="r" values="78;84;78" dur="2s" repeatCount="indefinite" />
+                    <animate attributeName="opacity" values="0.4;0.9;0.4" dur="2s" repeatCount="indefinite" />
+                  </circle>
+
+                  <circle cx="110" cy="110" r="60" fill="none" stroke="url(#neonGradientFooter)" strokeWidth="4" opacity="0.9" strokeDasharray="10 8">
+                    <animateTransform attributeName="transform" type="rotate" from="0 110 110" to="360 110 110" dur="5s" repeatCount="indefinite"/>
+                  </circle>
+
+                  <circle cx="110" cy="110" r="45" fill="url(#neonGradientFooter)" filter="url(#neonGlowFooter)" opacity="0.9">
+                    <animate attributeName="r" values="44;46;44" dur="1.8s" repeatCount="indefinite" />
+                  </circle>
+
+                  <g transform="translate(110,110)">
+                    <path d="M-25 -15q10 -5 25 0t25 0v25q-10 -5 -25 0t-25 0z" fill="white" opacity="0.2"/>
+                    <path d="M-25 -10q10 -5 25 0t25 0M-25 2q10 -5 25 0t25 0" stroke="#E0F2FE" strokeWidth="2" strokeLinecap="round" opacity="0.9"/>
+                  </g>
+
+                  <path d="M110 20 L115 40 L108 40 L113 60" stroke="#FACC15" strokeWidth="2" fill="none" filter="url(#sparkGlowFooter)">
+                    <animate attributeName="opacity" values="0;1;0" dur="1s" repeatCount="indefinite"/>
+                  </path>
+                  <path d="M110 200 L105 180 L112 180 L107 160" stroke="#FACC15" strokeWidth="2" fill="none" filter="url(#sparkGlowFooter)">
+                    <animate attributeName="opacity" values="0;1;0" dur="1s" begin="0.5s" repeatCount="indefinite"/>
+                  </path>
+
+                  <g transform="translate(110,110)">
+                    <animateTransform attributeName="transform" type="rotate" from="0" to="360" dur="12s" repeatCount="indefinite"/>
+                  </g>
+                </svg>
                 <span className="text-2xl font-bold text-white">EduGlow</span>
               </div>
               <p className="text-gray-400">
